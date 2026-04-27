@@ -1,0 +1,37 @@
+<div class="dashboard-wrapper">
+  <aside class="sidebar" [class.collapsed]="!isSidebarVisible">
+    <div class="logo">
+      <!-- <img src="assets/logo-siata.png" alt="Logo"> -->
+      <span *ngIf="isSidebarVisible">Gestión Riesgos</span>
+    </div>
+
+    <nav>
+      <ul>
+        <li *ngFor="let option of menuOptions">
+          <a [routerLink]="option.path" routerLinkActive="active">
+            <i class="icon">{{ option.icon }}</i>
+            <span *ngIf="isSidebarVisible">{{ option.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="logout-section">
+      <button (click)="logout()">
+        <i>exit_to_app</i>
+        <span *ngIf="isSidebarVisible">Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header>
+      <button (click)="toggleSidebar()">☰</button>
+      <span>Bienvenido, {{ userName }}</span>
+    </header>
+
+    <section class="router-container">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

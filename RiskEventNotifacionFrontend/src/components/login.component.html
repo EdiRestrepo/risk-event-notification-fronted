@@ -1,0 +1,13 @@
+<div class="login-container">
+  <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+    <h2>Plataforma de Riesgos - Login</h2>
+    
+    <input type="text" formControlName="userName" placeholder="Usuario">
+    <input type="password" formControlName="password" placeholder="Contraseña">
+    
+    <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
+    <!-- <p *ngIf="loginForm.invalid" style="color: red;">
+      Por favor, completa ambos campos.
+    </p> -->
+  </form>
+</div>
