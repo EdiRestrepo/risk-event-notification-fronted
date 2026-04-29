@@ -2,16 +2,20 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms'; // 1. Importa esto
-import { TmplAstIdleDeferredTrigger } from '@angular/compiler';
+import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  imports: [ReactiveFormsModule], // 2. Agrégalo aquí
+  styleUrls: ['./login.component.css'],
+  standalone: true,
+  imports: [ReactiveFormsModule, CommonModule],
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  isLoading = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -26,23 +30,31 @@ export class LoginComponent {
 
   onLogin() {
     if (this.loginForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
       this.authService.login(this.loginForm.value).subscribe({
         next: (res) => {
-          console.log("bien ", res);
-          alert('¡Bienvenido! El acceso es correcto.'); // Modal sencillo
-          //localStorage.setItem('token', res.token); // Guardamos el token
-          alert('Éxito: ' + res); // Aquí verás el mensaje que viene de .NET
-        
-        // Como la API solo devuelve un mensaje y no un token, 
-        // simulamos que el login fue exitoso para navegar
+          this.isLoading = false;
+          console.log("Login exitoso: ", res);
+
+          // Guardar información del usuario en localStorage
           localStorage.setItem('login_status', 'success');
-          this.router.navigate(['/dashboard']); // Vamos al menú
+          localStorage.setItem('currentUser', JSON.stringify(res.user));
+          localStorage.setItem('token', res.token);
+
+          // Navegación con delay para efecto visual
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 500);
         },
         error: (err) => {
-          console.log("error ", err);
-          alert('Credenciales incorrectas')
+          this.isLoading = false;
+          console.error("Error de autenticación: ", err);
+          this.errorMessage = 'Credenciales incorrectas. Intenta de nuevo.';
         }
       });
     }
   }
 }
+

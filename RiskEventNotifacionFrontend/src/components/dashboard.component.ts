@@ -5,19 +5,15 @@ import { RouterModule, Router } from '@angular/router';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule], // Importantes para directivas y rutas
-  templateUrl: './dashboard.component.html'
-  //styleUrls: ['./dashboard.component.css']
+  imports: [CommonModule, RouterModule],
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
-  
-  // Estado para controlar si el menú lateral está extendido o no
+
   isSidebarVisible: boolean = true;
-  
-  // Datos del usuario logueado (puedes traerlos de un servicio)
   userName: string = 'Usuario SIATA';
-  
-  // Lista de opciones del menú para hacerlo dinámico
+
   menuOptions = [
     { label: 'Mapa de Riesgo', icon: 'map', path: '/dashboard/mapa' },
     { label: 'Alertas Recientes', icon: 'notifications', path: '/dashboard/alertas' },
@@ -28,21 +24,34 @@ export class DashboardComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    // Aquí podrías validar si el token existe, si no, redirigir al login
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('login_status');
     if (!token) {
       this.router.navigate(['/login']);
+      return;
+    }
+
+    // Obtener el nombre del usuario de localStorage
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        const user = JSON.parse(currentUser);
+        this.userName = user.name || user.userName || 'Usuario SIATA';
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        this.userName = 'Usuario SIATA';
+      }
     }
   }
 
-  // Alternar visibilidad del sidebar
   toggleSidebar() {
     this.isSidebarVisible = !this.isSidebarVisible;
   }
 
-  // Método para cerrar sesión
   logout() {
-    localStorage.removeItem('token'); // Limpiar datos de sesión
-    this.router.navigate(['/login']); // Redirigir al login
+    localStorage.removeItem('login_status');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    this.router.navigate(['/login']);
   }
 }
+

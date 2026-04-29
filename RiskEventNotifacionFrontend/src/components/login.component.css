@@ -1,0 +1,84 @@
+.login-wrapper {
+  background: linear-gradient(135deg, #1a3a52 0%, #0f2438 100%);
+  min-height: 100vh;
+}
+
+.login-wrapper h1 {
+  font-weight: 800;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.login-wrapper h2 {
+  color: #ff6b35;
+  font-weight: 700;
+}
+
+.login-wrapper p {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+}
+
+.login-wrapper ul li {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+}
+
+.login-wrapper ul li i {
+  color: #ff6b35;
+  margin-right: 10px;
+}
+
+.card {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.input-group-text {
+  background-color: #f8f9fa !important;
+  color: #1a3a52;
+  border: none !important;
+}
+
+.form-control {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+  font-size: 1rem;
+}
+
+.form-control:focus {
+  background-color: white !important;
+  border-color: #ff6b35 !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+}
+
+.form-label {
+  color: #1a3a52;
+  font-size: 0.95rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+  font-size: 0.85rem;
+}
+
+/* Animaciones */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.col-lg-5 {
+  animation: slideInRight 0.5s ease;
+}
