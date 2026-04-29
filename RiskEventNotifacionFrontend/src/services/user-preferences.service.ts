@@ -101,6 +101,36 @@ export class UserPreferencesService {
   }
 
   /**
+   * Simula el envío de preferencias al backend.
+   * Utiliza la Factory Method para recrear los canales activos según la selección del usuario.
+   */
+  savePreferences(): void {
+    this.initializeChannels();
+
+    console.log('═══════════════════════════════════════════════════');
+    console.log('📡 [Backend Simulado] Guardando preferencias de notificación...');
+    console.log('   Usuario:', this.userPreferences.userId);
+    console.log('   Canales seleccionados:', this.userPreferences.channels);
+    console.log('   Canales activos creados por Factory:', this.userPreferences.activeChannels.map(ch => ch.name));
+    console.log('═══════════════════════════════════════════════════');
+
+    // Simula enviar una notificación de prueba a cada canal activo
+    this.userPreferences.activeChannels.forEach(channel => {
+      if (channel.isActive()) {
+        channel.send('Preferencias actualizadas correctamente', this.userPreferences.userId);
+      }
+    });
+  }
+
+  /**
+   * Alterna el estado de un canal y devuelve el nuevo estado
+   */
+  toggleChannel(channelName: keyof typeof this.userPreferences.channels): boolean {
+    this.userPreferences.channels[channelName] = !this.userPreferences.channels[channelName];
+    return this.userPreferences.channels[channelName];
+  }
+
+  /**
    * Obtiene los canales activos del usuario
    */
   getActiveChannels(): NotificationChannel[] {

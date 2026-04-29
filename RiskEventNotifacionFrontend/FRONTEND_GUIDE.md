@@ -42,8 +42,21 @@ src/
 
 ### Descripción
 
-El patrón Factory Method se implementa para crear canales de notificación según las preferencias del usuario:
+El patrón **Factory Method (Parameterized)** se implementa para crear canales de notificación según las preferencias del usuario. Esta variante está documentada en el libro GoF (Gang of Four) y es la más adecuada para contextos de inyección de dependencias como Angular.
 
+**Elementos del patrón:**
+- **Product (Interface)**: `NotificationChannel` — define el contrato que todos los canales deben cumplir
+- **ConcreteProducts**: `SMSChannel`, `EmailChannel`, `PushChannel`, `WhatsAppChannel` — implementaciones concretas
+- **Factory**: `NotificationChannelFactory` — encapsula la lógica de creación, el cliente nunca instancia directamente las clases concretas
+
+**Cumplimiento SOLID:**
+- **SRP**: Cada clase tiene una única responsabilidad (enviar por su canal específico)
+- **OCP**: La factory usa un registro (`Map`) en lugar de `switch`, permitiendo agregar nuevos canales con `registerChannel()` sin modificar la clase
+- **LSP**: Todos los canales son sustituibles a través de la interfaz `NotificationChannel`
+- **ISP**: La interfaz `NotificationChannel` es pequeña y cohesiva (solo `name`, `send()`, `isActive()`)
+- **DIP**: `UserPreferencesService` depende de la abstracción `NotificationChannel`, no de las clases concretas
+
+**Canales disponibles:**
 - **SMS Channel**: Envía notificaciones via SMS
 - **Email Channel**: Envía notificaciones via correo electrónico
 - **Push Channel**: Envía notificaciones push en la app
@@ -52,30 +65,45 @@ El patrón Factory Method se implementa para crear canales de notificación seg�
 ### Diagrama UML
 
 ```
-┌────────────────────────────┐
-│  NotificationChannel       │
-│  (Interface)               │
-├────────────────────────────┤
-│ + send(message, recipient) │
-│ + isActive()               │
-└────────────────────────────┘
-         ▲
-         │ implements
-    ┌────┴────────────────────┬──────────────────┐
-    │                         │                  │
-┌───────────┐    ┌─────────┐  ┌─────────┐    ┌──────────┐
-│SMSChannel │    │EmailCh. │  │PushCh.  │    │WhatsAppCh│
-└───────────┘    └─────────┘  └─────────┘    └──────────┘
-    ▲                ▲            ▲               ▲
-    │                │            │               │
-    └────────────────┴────────────┴───────────────┘
-              created by
-    ┌──────────────────────────────┐
-    │NotificationChannelFactory    │
-    ├──────────────────────────────┤
-    │+ createChannel(type)         │
-    │+ createChannels(preferences) │
-    └──────────────────────────────┘
+┌─────────────────────────────────┐
+│  <<interface>>                  │
+│  NotificationChannel            │
+├─────────────────────────────────┤
+│ + name: string                  │
+│ + send(message, recipient): void│
+│ + isActive(): boolean           │
+└─────────────────────────────────┘
+              ▲
+              │ implements
+    ┌─────────┼──────────────────────────────────┐
+    │         │                  │                │
+┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────────────┐
+│SMSChannel │ │EmailChannel│ │PushChannel│ │WhatsAppChannel│
+└───────────┘ └───────────┘ └───────────┘ └─────────────┘
+    ▲              ▲              ▲              ▲
+    │              │              │              │
+    └──────────────┴──────────────┴──────────────┘
+                   created by
+    ┌──────────────────────────────────────────┐
+    │  NotificationChannelFactory              │
+    ├──────────────────────────────────────────┤
+    │ - channelRegistry: Map<string, Function> │
+    ├──────────────────────────────────────────┤
+    │ + createChannel(type): NotificationChannel│
+    │ + createChannels(prefs): NotificationChannel[]│
+    │ + registerChannel(type, creator): void   │
+    │ + getAvailableChannels(): string[]       │
+    └──────────────────────────────────────────┘
+              ▲
+              │ uses (DI)
+    ┌──────────────────────────────────────────┐
+    │  UserPreferencesService                  │
+    ├──────────────────────────────────────────┤
+    │ + getPreferences()                       │
+    │ + toggleChannel(name)                    │
+    │ + savePreferences()                      │
+    │ + sendNotification(message, recipient)   │
+    └──────────────────────────────────────────┘
 ```
 
 ### Uso
@@ -84,13 +112,16 @@ El patrón Factory Method se implementa para crear canales de notificación seg�
 // Inyectar la factory
 constructor(private factory: NotificationChannelFactory) {}
 
-// Crear un canal
+// Crear un canal específico
 const smsChannel = this.factory.createChannel('sms');
 smsChannel.send('Alerta de lluvia', '+57301234567');
 
-// Crear múltiples canales según preferencias
+// Crear múltiples canales según preferencias del usuario
 const channels = this.factory.createChannels(['sms', 'email', 'push']);
 channels.forEach(ch => ch.send(message, recipient));
+
+// Registrar un nuevo canal sin modificar la factory (OCP)
+this.factory.registerChannel('telegram', () => new TelegramChannel());
 ```
 
 ## 🚀 Instalación y Ejecución

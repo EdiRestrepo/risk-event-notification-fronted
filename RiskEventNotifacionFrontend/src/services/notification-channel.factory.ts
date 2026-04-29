@@ -9,14 +9,26 @@ import {
 
 /**
  * Factory Method para crear instancias de canales de notificación
- * Patrón de diseño: Factory Method
+ * Patrón de diseño: Factory Method (Parameterized)
  *
  * Este servicio implementa el patrón Factory Method que permite
  * crear diferentes tipos de canales de notificación según las
  * preferencias del usuario.
+ *
+ * Se utiliza un registro (Map) en lugar de switch/case para cumplir
+ * con el Principio Open/Closed (OCP): se pueden agregar nuevos canales
+ * sin modificar la clase, usando registerChannel().
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationChannelFactory {
+
+  private channelRegistry = new Map<string, () => NotificationChannel>([
+    ['sms', () => new SMSChannel()],
+    ['email', () => new EmailChannel()],
+    ['push', () => new PushChannel()],
+    ['app', () => new PushChannel()],
+    ['whatsapp', () => new WhatsAppChannel()],
+  ]);
 
   /**
    * Crea una instancia del canal de notificación especificado
@@ -25,24 +37,22 @@ export class NotificationChannelFactory {
    */
   createChannel(channelType: string): NotificationChannel {
     const type = channelType.toLowerCase();
+    const creator = this.channelRegistry.get(type);
 
-    switch (type) {
-      case 'sms':
-        return new SMSChannel();
-
-      case 'email':
-        return new EmailChannel();
-
-      case 'push':
-      case 'app':
-        return new PushChannel();
-
-      case 'whatsapp':
-        return new WhatsAppChannel();
-
-      default:
-        throw new Error(`Canal de notificación no soportado: ${channelType}`);
+    if (!creator) {
+      throw new Error(`Canal de notificación no soportado: ${channelType}`);
     }
+
+    return creator();
+  }
+
+  /**
+   * Registra un nuevo tipo de canal de notificación (OCP - extensión sin modificación)
+   * @param type - Identificador del canal
+   * @param creator - Función creadora que retorna la instancia del canal
+   */
+  registerChannel(type: string, creator: () => NotificationChannel): void {
+    this.channelRegistry.set(type.toLowerCase(), creator);
   }
 
   /**
@@ -56,7 +66,7 @@ export class NotificationChannelFactory {
 
   /**
    * Obtiene los tipos de canales disponibles
-   * @returns Array de tipos de canales
+   * @returns Array de tipos de canales (sin alias)
    */
   getAvailableChannels(): string[] {
     return ['sms', 'email', 'push', 'whatsapp'];

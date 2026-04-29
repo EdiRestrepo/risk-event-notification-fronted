@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { UserPreferencesService } from '../services/user-preferences.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,14 @@ export class DashboardComponent implements OnInit {
   isSidebarVisible: boolean = true;
   userName: string = 'Usuario SIATA';
 
+  // Estado de los canales de notificación
+  channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
+    sms: true,
+    email: true,
+    push: true,
+    whatsapp: false
+  };
+
   menuOptions = [
     { label: 'Mapa de Riesgo', icon: 'map', path: '/dashboard/mapa' },
     { label: 'Alertas Recientes', icon: 'notifications', path: '/dashboard/alertas' },
@@ -21,7 +30,10 @@ export class DashboardComponent implements OnInit {
     { label: 'Configuración', icon: 'settings', path: '/dashboard/config' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private userPreferencesService: UserPreferencesService
+  ) {}
 
   ngOnInit(): void {
     const token = localStorage.getItem('login_status');
@@ -41,6 +53,19 @@ export class DashboardComponent implements OnInit {
         this.userName = 'Usuario SIATA';
       }
     }
+
+    // Cargar preferencias actuales del servicio
+    const prefs = this.userPreferencesService.getPreferences();
+    this.channelPreferences = { ...prefs.channels };
+  }
+
+  toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {
+    const newState = this.userPreferencesService.toggleChannel(channel);
+    this.channelPreferences[channel] = newState;
+  }
+
+  savePreferences(): void {
+    this.userPreferencesService.savePreferences();
   }
 
   toggleSidebar() {

@@ -48,7 +48,7 @@ export class PushChannel implements NotificationChannel {
 // Implementación para WhatsApp
 export class WhatsAppChannel implements NotificationChannel {
   name = 'WhatsApp';
-  private active = false;
+  private active = true;
 
   send(message: string, recipient: string): void {
     console.log(`💬 Enviando WhatsApp a ${recipient}: ${message}`);
