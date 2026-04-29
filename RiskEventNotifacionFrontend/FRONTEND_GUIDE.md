@@ -231,4 +231,54 @@ Este proyecto es parte del curso de Patrones de Diseño en Edison Academy.
 
 ---
 
+## 🔍 Observación sobre la implementación del Factory Method
+
+### Observación planteada
+
+> "El patrón Factory Method no está bien implementado porque la creación de canales debería llegar desde el backend y el frontend debe tener la capacidad para crear dichos canales con la información que llega desde el backend."
+
+### Veredicto: FALSO
+
+La observación **confunde dos responsabilidades distintas**: la implementación del patrón creacional y la fuente de datos.
+
+### Justificación
+
+**1. El Factory Method define *cómo* se crean objetos, no *de dónde vienen los datos*.**
+
+El Factory Method es un patrón creacional cuyo propósito es:
+- Encapsular la lógica de instanciación de objetos
+- Desacoplar al cliente de las clases concretas
+- Permitir que el cliente trabaje con abstracciones (la interfaz `NotificationChannel`)
+
+El patrón **no prescribe** de dónde proviene la información para decidir qué objetos crear. Eso es una decisión de arquitectura de datos, no del patrón en sí.
+
+**2. La implementación actual ya soporta datos del backend.**
+
+El código está diseñado para funcionar independientemente del origen de los datos:
+
+```typescript
+// Acepta cualquier fuente de datos:
+updatePreferences(preferences: Partial<UserNotificationPreferences>): void
+
+// La factory recibe strings — no le importa si vienen del backend, localStorage o hardcode:
+createChannels(preferences: string[]): NotificationChannel[]
+```
+
+Si mañana se conecta un endpoint que devuelve `{ channels: { sms: true, email: false, push: true, whatsapp: true } }`, solo se necesita hacer un `HttpClient.get()` y pasar esos datos a `updatePreferences()`. La factory funciona exactamente igual — crea las instancias concretas según el array que recibe.
+
+**3. Lo que el compañero describe es otra responsabilidad.**
+
+Lo que plantea es un requerimiento de persistencia y fuente de datos (que las preferencias vengan del backend), no un defecto del patrón. Son dos capas distintas:
+
+| Capa | Responsabilidad | Estado actual |
+|------|----------------|---------------|
+| **Creación de objetos** (Factory Method) | Instanciar el canal correcto según un tipo | ✅ Correctamente implementado |
+| **Fuente de datos** (Servicio HTTP) | Obtener las preferencias del usuario | Simulado localmente (decisión deliberada por ausencia de backend) |
+
+### Conclusión
+
+El patrón Factory Method está correctamente implementado. Lo que el compañero describe es un requerimiento de integración con el backend (que las preferencias se persistan y se lean desde una API), lo cual es un tema de **infraestructura** que no invalida ni afecta la correcta aplicación del patrón creacional. El día que exista el backend, la factory seguirá haciendo exactamente lo mismo: recibir tipos de canal y crear las instancias concretas correspondientes.
+
+---
+
 **Plataforma de Alertas Tempranas** | Valle de Aburrá | 2026
