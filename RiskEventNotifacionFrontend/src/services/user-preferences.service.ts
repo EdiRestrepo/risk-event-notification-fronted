@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { NotificationChannelFactory } from './notification-channel.factory';
-import { NotificationChannel } from './notification-channel.interface';
+import { NotificationChannelFactory } from './factory-method/notification-channel.factory';
+import { NotificationChannel } from './factory-method/notification-channel.interface';
 
 /**
  * Modelo para las preferencias de notificación del usuario
