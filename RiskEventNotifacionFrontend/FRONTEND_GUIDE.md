@@ -112,7 +112,19 @@ El patrón **Factory Method** se implementa siguiendo la estructura GoF (Gang of
   │ + savePreferences()                                      │
   │ + sendNotification(message, recipient)                   │
   └──────────────────────────────────────────────────────────┘
+           ▲
+           │ (dependencia - flecha punteada)
+           │
+  ┌────────┴─────────────────────────────────────────┐
+  │  NotificationChannelCreator (Creator - Abstract) │
+  └────────────────────────────────────────────────────┘
 ```
+
+**Notación de la relación:**
+- **Flecha punteada** (------->) indica una **DEPENDENCIA**
+- `UserPreferencesService` (Client) depende de la abstracción `NotificationChannelCreator`
+- El Client NO es responsable del ciclo de vida del Creator
+- Relación de tipo "usa" (weak coupling)
 
 **Flujo de creación (GoF puro):**
 1. `UserPreferencesService` (Client) mantiene un registro de `ConcreteCreators` tipados como `NotificationChannelCreator` (Creator abstracto)
