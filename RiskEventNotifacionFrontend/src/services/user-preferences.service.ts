@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
-import { NotificationChannelFactory } from './factory-method/notification-channel.factory';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
+import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
+import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
+import { EmailChannelCreator } from './factory-method/creators/email-channel-creator';
+import { PushChannelCreator } from './factory-method/creators/push-channel-creator';
+import { WhatsAppChannelCreator } from './factory-method/creators/whatsapp-channel-creator';
 
 /**
  * Modelo para las preferencias de notificación del usuario
@@ -18,10 +22,18 @@ export interface UserNotificationPreferences {
 
 /**
  * Servicio para gestionar las preferencias de notificación del usuario
- * Utiliza el patrón Factory Method a través de NotificationChannelFactory
+ * Utiliza directamente los ConcreteCreators del patrón Factory Method (GoF)
  */
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
+
+  /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
+  private creators = new Map<string, NotificationChannelCreator>([
+    ['sms', new SMSChannelCreator()],
+    ['email', new EmailChannelCreator()],
+    ['push', new PushChannelCreator()],
+    ['whatsapp', new WhatsAppChannelCreator()],
+  ]);
 
   private userPreferences: UserNotificationPreferences = {
     userId: 'user_001',
@@ -34,7 +46,7 @@ export class UserPreferencesService {
     activeChannels: []
   };
 
-  constructor(private channelFactory: NotificationChannelFactory) {
+  constructor() {
     this.initializeChannels();
   }
 
@@ -49,8 +61,12 @@ export class UserPreferencesService {
     if (this.userPreferences.channels.push) activeChannelNames.push('push');
     if (this.userPreferences.channels.whatsapp) activeChannelNames.push('whatsapp');
 
-    // Utiliza la factory para crear los canales
-    this.userPreferences.activeChannels = this.channelFactory.createChannels(activeChannelNames);
+    // Cada ConcreteCreator crea su ConcreteProduct vía el factory method
+    this.userPreferences.activeChannels = activeChannelNames.map(name => {
+      const creator = this.creators.get(name);
+      if (!creator) throw new Error(`Canal no soportado: ${name}`);
+      return creator.createChannel();
+    });
   }
 
   /**

@@ -36,7 +36,6 @@ src/
 │   └── factory-method/                      # Patrón Factory Method (GoF)
 │       ├── notification-channel.interface.ts # Product (interfaz)
 │       ├── notification-channel-creator.ts   # Creator (clase abstracta)
-│       ├── notification-channel.factory.ts   # Coordinador (registro de Creators)
 │       ├── channels/                         # ConcreteProducts
 │       │   ├── sms-channel.ts
 │       │   ├── email-channel.ts
@@ -61,14 +60,13 @@ El patrón **Factory Method** se implementa siguiendo la estructura GoF (Gang of
 - **ConcreteProducts**: `SMSChannel`, `EmailChannel`, `PushChannel`, `WhatsAppChannel` — implementaciones concretas del Product
 - **Creator (Abstract)**: `NotificationChannelCreator` — declara el factory method abstracto `createChannel()` y una operación `sendNotification()` que lo utiliza
 - **ConcreteCreators**: `SMSChannelCreator`, `EmailChannelCreator`, `PushChannelCreator`, `WhatsAppChannelCreator` — cada uno sobreescribe `createChannel()` para retornar su ConcreteProduct
-- **Coordinador**: `NotificationChannelFactory` — servicio Angular inyectable que mantiene un registro (`Map`) de ConcreteCreators y delega la creación
 
 **Cumplimiento SOLID:**
 - **SRP**: Cada clase tiene una única responsabilidad (enviar por su canal específico)
-- **OCP**: La factory usa un registro (`Map`) en lugar de `switch`, permitiendo agregar nuevos canales con `registerChannel()` sin modificar la clase
+- **OCP**: Se pueden agregar nuevos canales creando un nuevo ConcreteCreator y ConcreteProduct sin modificar las clases existentes
 - **LSP**: Todos los canales son sustituibles a través de la interfaz `NotificationChannel`
 - **ISP**: La interfaz `NotificationChannel` es pequeña y cohesiva (solo `name`, `send()`, `isActive()`)
-- **DIP**: `UserPreferencesService` depende de la abstracción `NotificationChannel`, no de las clases concretas
+- **DIP**: Los servicios dependen de la abstracción `NotificationChannelCreator` y `NotificationChannel`, no de las clases concretas
 
 **Canales disponibles:**
 - **SMS Channel**: Envía notificaciones via SMS
@@ -84,40 +82,30 @@ El patrón **Factory Method** se implementa siguiendo la estructura GoF (Gang of
   │  NotificationChannelCreator               │       │  NotificationChannel            │
   │  (Creator)                                │       │  (Product)                      │
   ├───────────────────────────────────────────┤       ├─────────────────────────────────┤
-  │ + createChannel(): NotificationChannel {abstract} │ + name: string                  │
-  │ + sendNotification(message, recipient): void      │ + send(message, recipient): void│
-  └───────────────────────────────────────────┘       │ + isActive(): boolean           │
-                    ▲                                 └─────────────────────────────────┘
-                    │ extends                                       ▲
-    ┌───────────────┼───────────────────────────┐                   │ implements
-    │               │               │           │       ┌───────────┼───────────────────────────┐
-    │               │               │           │       │           │           │               │
-┌──────────┐ ┌────────────┐ ┌──────────┐ ┌────────────┐ │           │           │               │
-│SMSChannel│ │EmailChannel│ │PushChannel│ │WhatsApp    │ │           │           │               │
-│Creator   │ │Creator     │ │Creator   │ │ChannelCreator│           │           │               │
-└──────────┘ └────────────┘ └──────────┘ └────────────┘ │           │           │               │
-    │ creates        │ creates      │ creates    │ creates         │           │               │
-    ▼                ▼              ▼             ▼      │           │           │               │
-┌──────────┐ ┌────────────┐ ┌──────────┐ ┌────────────┐ │           │           │               │
-│SMSChannel│ │EmailChannel│ │PushChannel│ │WhatsApp    │◄┘           │           │               │
-│          │ │            │ │          │ │Channel     │  ◄──────────┘           │               │
-└──────────┘ └────────────┘ └──────────┘ └────────────┘      ◄─────────────────┘               │
-                                                                  ◄────────────────────────────┘
+  │ + createChannel(): NotificationChannel    │·····>│ + name: string                  │
+  │   {abstract}                              │       │ + send(message, recipient): void│
+  │ + sendNotification(message, recipient)    │       │ + isActive(): boolean           │
+  └───────────────────────────────────────────┘       └─────────────────────────────────┘
+                    ▲                                               ▲
+                    │ extends                                       │ implements
+    ┌───────────────┼───────────────────────────┐   ┌───────────────┼───────────────────────────┐
+    │               │               │           │   │               │               │           │
+┌──────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐
+│SMSChannel│ │EmailChannel│ │PushChannel│ │WhatsApp  │ │SMS       │ │Email       │ │Push      │ │WhatsApp  │
+│Creator   │ │Creator     │ │Creator    │ │Channel   │ │Channel   │ │Channel     │ │Channel   │ │Channel   │
+│          │ │            │ │           │ │Creator   │ │          │ │            │ │          │ │          │
+└──────────┘ └────────────┘ └──────────┘ └──────────┘ └──────────┘ └────────────┘ └──────────┘ └──────────┘
+     │               │              │           │          ▲             ▲             ▲            ▲
+     │  creates      │  creates     │  creates  │ creates  │             │             │            │
+     └───────────────┴──────────────┴───────────┴──────────┘             │             │            │
+                                                       └───────────────┘             │            │
+                                                                     └───────────────┘            │
+                                                                                    └─────────────┘
 
   ┌──────────────────────────────────────────────────────────┐
-  │  NotificationChannelFactory (Coordinador)                │
+  │  UserPreferencesService (Client)                         │
   ├──────────────────────────────────────────────────────────┤
-  │ - creatorRegistry: Map<string, NotificationChannelCreator>│
-  ├──────────────────────────────────────────────────────────┤
-  │ + createChannel(type): NotificationChannel               │
-  │ + createChannels(prefs): NotificationChannel[]           │
-  │ + registerChannel(type, creator): void                   │
-  │ + getAvailableChannels(): string[]                       │
-  └──────────────────────────────────────────────────────────┘
-                    ▲
-                    │ uses (DI)
-  ┌──────────────────────────────────────────────────────────┐
-  │  UserPreferencesService                                  │
+  │ - creators: Map<string, NotificationChannelCreator>      │
   ├──────────────────────────────────────────────────────────┤
   │ + getPreferences()                                       │
   │ + toggleChannel(name)                                    │
@@ -126,32 +114,31 @@ El patrón **Factory Method** se implementa siguiendo la estructura GoF (Gang of
   └──────────────────────────────────────────────────────────┘
 ```
 
-**Flujo de creación:**
-1. `UserPreferencesService` solicita un canal a `NotificationChannelFactory`
-2. El Factory busca el `ConcreteCreator` correspondiente en su registro (`Map`)
-3. El `ConcreteCreator` ejecuta su `createChannel()` y retorna el `ConcreteProduct`
-4. El servicio recibe una instancia de `NotificationChannel` (abstracción) sin conocer la clase concreta
+**Flujo de creación (GoF puro):**
+1. `UserPreferencesService` (Client) mantiene un registro de `ConcreteCreators` tipados como `NotificationChannelCreator` (Creator abstracto)
+2. Para crear un canal, obtiene el `ConcreteCreator` del registro y llama a `creator.createChannel()`
+3. El `ConcreteCreator` ejecuta su factory method y retorna el `ConcreteProduct`
+4. El Client recibe una instancia de `NotificationChannel` (Product) sin conocer la clase concreta
 
 ### Uso
 
 ```typescript
-// Inyectar la factory
-constructor(private factory: NotificationChannelFactory) {}
-
-// Crear un canal específico (delega al ConcreteCreator correspondiente)
-const smsChannel = this.factory.createChannel('sms');
-smsChannel.send('Alerta de lluvia', '+57301234567');
-
-// Crear múltiples canales según preferencias del usuario
-const channels = this.factory.createChannels(['sms', 'email', 'push']);
-channels.forEach(ch => ch.send(message, recipient));
-
-// Usar un ConcreteCreator directamente
-const creator = new SMSChannelCreator();
+// Usar un ConcreteCreator directamente (GoF puro)
+const creator: NotificationChannelCreator = new SMSChannelCreator();
 creator.sendNotification('Alerta de lluvia', '+57301234567');
 
-// Registrar un nuevo canal sin modificar la factory (OCP)
-this.factory.registerChannel('telegram', new TelegramChannelCreator());
+// Crear un canal a través del factory method
+const channel: NotificationChannel = creator.createChannel();
+channel.send('Alerta de lluvia', '+57301234567');
+
+// Dentro de un servicio, el registro de creators permite seleccionar por tipo
+const creators = new Map<string, NotificationChannelCreator>([
+  ['sms', new SMSChannelCreator()],
+  ['email', new EmailChannelCreator()],
+]);
+const smsCreator = creators.get('sms')!;
+const smsChannel = smsCreator.createChannel();
+smsChannel.send(message, recipient);
 ```
 
 ## 🚀 Instalación y Ejecución

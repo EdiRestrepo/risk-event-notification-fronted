@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
-import { NotificationChannelFactory } from './factory-method/notification-channel.factory';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
+import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
+import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
+import { EmailChannelCreator } from './factory-method/creators/email-channel-creator';
+import { PushChannelCreator } from './factory-method/creators/push-channel-creator';
+import { WhatsAppChannelCreator } from './factory-method/creators/whatsapp-channel-creator';
 import * as signalR from '@microsoft/signalr';
 
 /**
@@ -37,7 +41,13 @@ export class NotificationService {
   private hubConnection!: signalR.HubConnection;
   private notificationHistory: Notification[] = [];
 
-  constructor(private channelFactory: NotificationChannelFactory) {}
+  /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
+  private creators = new Map<string, NotificationChannelCreator>([
+    ['sms', new SMSChannelCreator()],
+    ['email', new EmailChannelCreator()],
+    ['push', new PushChannelCreator()],
+    ['whatsapp', new WhatsAppChannelCreator()],
+  ]);
 
   /**
    * Envía una notificación a través de los canales especificados
@@ -53,8 +63,10 @@ export class NotificationService {
     // Iterar sobre los canales solicitados
     notification.channels.forEach(channelName => {
       try {
-        // Usar la factory para crear la instancia del canal
-        const channel = this.channelFactory.createChannel(channelName);
+        // Usar el ConcreteCreator para crear la instancia del canal
+        const creator = this.creators.get(channelName);
+        if (!creator) throw new Error(`Canal no soportado: ${channelName}`);
+        const channel = creator.createChannel();
 
         // Enviar la notificación a través del canal
         const response = this.sendViaChannel(
