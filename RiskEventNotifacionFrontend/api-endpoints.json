@@ -1,0 +1,133 @@
+{
+  "baseUrl": "https://localhost:44357/api",
+  "endpoints": [
+    {
+      "name": "Login",
+      "method": "POST",
+      "url": "/api/auth/login",
+      "description": "Autentica al usuario con sus credenciales y devuelve un token de sesión junto con los datos básicos del usuario.",
+      "request": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "userName": "string",
+          "password": "string"
+        },
+        "example": {
+          "userName": "carolina",
+          "password": "1234"
+        }
+      },
+      "response": {
+        "statusCode": 200,
+        "body": {
+          "success": "boolean"
+        },
+        "example": {
+          "success": true
+        }
+      }
+    },
+    {
+      "name": "Consultar preferencias de notificación",
+      "method": "GET",
+      "url": "/api/preferences/{userId}",
+      "description": "Obtiene las preferencias de canales de notificación del usuario. Si el usuario no tiene preferencias guardadas (primera vez), todos los canales deben retornar en false.",
+      "request": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "params": {
+          "userId": "string — ID del usuario autenticado"
+        },
+        "example": "GET /api/preferences/carolina"
+      },
+      "response": {
+        "statusCode": 200,
+        "body": {
+          "userId": "string",
+          "channels": {
+            "sms": "boolean",
+            "email": "boolean",
+            "push": "boolean",
+            "whatsapp": "boolean"
+          }
+        },
+        "example_primera_vez": {
+          "userId": "carolina",
+          "channels": {
+            "sms": false,
+            "email": false,
+            "push": false,
+            "whatsapp": false
+          }
+        },
+        "example_con_preferencias_guardadas": {
+          "userId": "carolina",
+          "channels": {
+            "sms": true,
+            "email": true,
+            "push": true,
+            "whatsapp": false
+          }
+        }
+      }
+    },
+    {
+      "name": "Guardar preferencias de notificación",
+      "method": "PUT",
+      "url": "/api/preferences/{userId}",
+      "description": "Persiste las preferencias de canales de notificación seleccionadas por el usuario. Se invoca cuando el usuario hace clic en 'Gestionar preferencias'.",
+      "request": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "params": {
+          "userId": "string — ID del usuario autenticado"
+        },
+        "body": {
+          "channels": {
+            "sms": "boolean",
+            "email": "boolean",
+            "push": "boolean",
+            "whatsapp": "boolean"
+          }
+        },
+        "example": {
+          "channels": {
+            "sms": true,
+            "email": true,
+            "push": false,
+            "whatsapp": true
+          }
+        }
+      },
+      "response": {
+        "statusCode": 200,
+        "body": {
+          "success": "boolean",
+          "message": "string",
+          "userId": "string",
+          "channels": {
+            "sms": "boolean",
+            "email": "boolean",
+            "push": "boolean",
+            "whatsapp": "boolean"
+          }
+        },
+        "example": {
+          "success": true,
+          "message": "Preferencias actualizadas correctamente",
+          "userId": "carolina",
+          "channels": {
+            "sms": true,
+            "email": true,
+            "push": false,
+            "whatsapp": true
+          }
+        }
+      }
+    }
+  ]
+}
