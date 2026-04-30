@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
@@ -20,7 +20,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.loginForm = this.fb.group({
       userName: ['', Validators.required],
@@ -50,8 +51,9 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isLoading = false;
-          console.error("Error de autenticación: ", err);
           this.errorMessage = 'Credenciales incorrectas. Intenta de nuevo.';
+          this.cdr.detectChanges();
+          console.error("Error de autenticación: ", err);
         }
       });
     }
