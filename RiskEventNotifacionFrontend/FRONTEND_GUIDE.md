@@ -281,4 +281,14 @@ El patrón Factory Method está correctamente implementado. Lo que el compañero
 
 ---
 
+## 📌 Resumen del Trabajo
+
+**Patrón implementado:** Factory Method (Parameterized) — patrón creacional del catálogo GoF (Gang of Four).
+
+**Funcionalidad:** Cuando un usuario entra al dashboard, puede ver los canales de notificación disponibles (SMS, Email, App y WhatsApp) y activar o desactivar los que prefiera usando los toggles. Al hacer clic en "Gestionar preferencias", el sistema toma los canales que el usuario dejó activos, crea las instancias correspondientes usando la factory y simula el envío de una confirmación por cada canal seleccionado (visible en la consola del navegador).
+
+**Justificación de la implementación del patrón:** En esta aplicación hay varios tipos de canales de notificación y cada uno se comporta diferente (SMS envía un mensaje de texto, Email envía un correo, etc.). En lugar de que el dashboard o el servicio de preferencias tengan que saber cómo crear cada canal con `new SMSChannel()`, `new EmailChannel()`, etc., se delega esa responsabilidad a una factory. El dashboard simplemente le dice "necesito un canal de tipo sms" y la factory se encarga de devolver el objeto correcto. Esto hace que si mañana se necesita agregar un canal nuevo (por ejemplo Telegram), solo se registra en la factory sin tocar el resto del código.
+
+---
+
 **Plataforma de Alertas Tempranas** | Valle de Aburrá | 2026
