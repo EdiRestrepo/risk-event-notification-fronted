@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NotificationChannelFactory } from './notification-channel.factory';
 import { NotificationChannel } from './notification-channel.interface';
+import * as signalR from '@microsoft/signalr';
 
 /**
  * Modelo para representar una notificación
@@ -33,6 +34,7 @@ export interface NotificationResponse {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
 
+  private hubConnection!: signalR.HubConnection;
   private notificationHistory: Notification[] = [];
 
   constructor(private channelFactory: NotificationChannelFactory) {}
@@ -212,6 +214,32 @@ export class NotificationService {
       message,
       recipient,
       channels
+    });
+  }
+
+    startConnection() {
+    this.hubConnection = new signalR.HubConnectionBuilder()
+      .withUrl('https://localhost:44357/notificationHub')
+      .withAutomaticReconnect()
+      .build();
+
+    this.hubConnection
+      .start()
+      .then(() => console.log('SignalR conectado'))
+      .catch(err => console.error('Error al conectar SignalR:', err));
+  }
+
+  stopConnection() {
+    if (this.hubConnection) {
+      this.hubConnection.stop()
+        .then(() => console.log('SignalR desconectado'));
+    }
+  }
+
+  receiveNotifications() {
+    this.hubConnection.on('ReceiveNotification', (message) => {
+      alert("Nueva notificación "+ message);
+      console.log('Nueva notificación:', message);
     });
   }
 }
