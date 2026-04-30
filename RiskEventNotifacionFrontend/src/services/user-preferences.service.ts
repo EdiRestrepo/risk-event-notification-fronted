@@ -1,4 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
 import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
 import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
@@ -21,11 +24,29 @@ export interface UserNotificationPreferences {
 }
 
 /**
+ * Respuesta del backend al guardar preferencias
+ */
+export interface SavePreferencesResponse {
+  success: boolean;
+  message: string;
+  userId: string;
+  channels: {
+    sms: boolean;
+    email: boolean;
+    push: boolean;
+    whatsapp: boolean;
+  };
+}
+
+/**
  * Servicio para gestionar las preferencias de notificación del usuario
  * Utiliza directamente los ConcreteCreators del patrón Factory Method (GoF)
+ * Se integra con el backend para persistir preferencias
  */
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
+
+  private apiUrl = 'https://localhost:44357/api/preferences';
 
   /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
   private creators = new Map<string, NotificationChannelCreator>([
@@ -36,19 +57,17 @@ export class UserPreferencesService {
   ]);
 
   private userPreferences: UserNotificationPreferences = {
-    userId: 'user_001',
+    userId: '',
     channels: {
-      sms: true,
-      email: true,
-      push: true,
+      sms: false,
+      email: false,
+      push: false,
       whatsapp: false
     },
     activeChannels: []
   };
 
-  constructor() {
-    this.initializeChannels();
-  }
+  constructor(private http: HttpClient) {}
 
   /**
    * Inicializa los canales activos basados en las preferencias del usuario
@@ -70,14 +89,70 @@ export class UserPreferencesService {
   }
 
   /**
-   * Obtiene las preferencias del usuario
+   * Consulta las preferencias del usuario desde el backend
+   * GET /api/preferences/{userId}
+   * Si es la primera vez, el backend retorna todos los canales en false
+   */
+  loadPreferences(userId: string): Observable<UserNotificationPreferences> {
+    return this.http.get<{ userId: string; channels: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } }>(
+      `${this.apiUrl}/${userId}`
+    ).pipe(
+      map(response => {
+        this.userPreferences = {
+          userId: response.userId,
+          channels: { ...response.channels },
+          activeChannels: []
+        };
+        this.initializeChannels();
+        return this.userPreferences;
+      }),
+      catchError(error => {
+        console.error('Error al cargar preferencias:', error);
+        // Si falla, inicializar con valores por defecto (todo en false)
+        this.userPreferences = {
+          userId,
+          channels: { sms: false, email: false, push: false, whatsapp: false },
+          activeChannels: []
+        };
+        return throwError(() => new Error('No se pudieron cargar las preferencias'));
+      })
+    );
+  }
+
+  /**
+   * Guarda las preferencias del usuario en el backend
+   * PUT /api/preferences/{userId}
+   */
+  savePreferences(): Observable<SavePreferencesResponse> {
+    const userId = this.userPreferences.userId;
+    const body = {
+      channels: { ...this.userPreferences.channels }
+    };
+
+    return this.http.put<SavePreferencesResponse>(
+      `${this.apiUrl}/${userId}`, body
+    ).pipe(
+      tap(response => {
+        console.log('Preferencias guardadas exitosamente:', response);
+        // Actualizar canales activos después de guardar
+        this.initializeChannels();
+      }),
+      catchError(error => {
+        console.error('Error al guardar preferencias:', error);
+        return throwError(() => new Error('No se pudieron guardar las preferencias'));
+      })
+    );
+  }
+
+  /**
+   * Obtiene las preferencias del usuario (estado local)
    */
   getPreferences(): UserNotificationPreferences {
     return this.userPreferences;
   }
 
   /**
-   * Actualiza las preferencias del usuario
+   * Actualiza las preferencias del usuario localmente
    * @param preferences - Nuevas preferencias a aplicar
    */
   updatePreferences(preferences: Partial<UserNotificationPreferences>): void {
@@ -117,32 +192,11 @@ export class UserPreferencesService {
   }
 
   /**
-   * Simula el envío de preferencias al backend.
-   * Utiliza la Factory Method para recrear los canales activos según la selección del usuario.
-   */
-  savePreferences(): void {
-    this.initializeChannels();
-
-    console.log('═══════════════════════════════════════════════════');
-    console.log('📡 [Backend Simulado] Guardando preferencias de notificación...');
-    console.log('   Usuario:', this.userPreferences.userId);
-    console.log('   Canales seleccionados:', this.userPreferences.channels);
-    console.log('   Canales activos creados por Factory:', this.userPreferences.activeChannels.map(ch => ch.name));
-    console.log('═══════════════════════════════════════════════════');
-
-    // Simula enviar una notificación de prueba a cada canal activo
-    this.userPreferences.activeChannels.forEach(channel => {
-      if (channel.isActive()) {
-        channel.send('Preferencias actualizadas correctamente', this.userPreferences.userId);
-      }
-    });
-  }
-
-  /**
    * Alterna el estado de un canal y devuelve el nuevo estado
    */
   toggleChannel(channelName: keyof typeof this.userPreferences.channels): boolean {
     this.userPreferences.channels[channelName] = !this.userPreferences.channels[channelName];
+    this.initializeChannels();
     return this.userPreferences.channels[channelName];
   }
 

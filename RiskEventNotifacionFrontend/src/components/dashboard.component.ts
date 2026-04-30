@@ -50,15 +50,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
       try {
         const user = JSON.parse(currentUser);
         this.userName = user.name || user.userName || 'Usuario SIATA';
+
+        // Cargar preferencias desde el backend usando el userId
+        const userId = user.id || user.userName;
+        this.userPreferencesService.loadPreferences(userId).subscribe({
+          next: (prefs) => {
+            this.channelPreferences = { ...prefs.channels };
+          },
+          error: (err) => {
+            console.error('Error al cargar preferencias desde el backend:', err);
+            // Usar valores por defecto si falla la carga
+            const prefs = this.userPreferencesService.getPreferences();
+            this.channelPreferences = { ...prefs.channels };
+          }
+        });
       } catch (e) {
         console.error('Error parsing user data:', e);
         this.userName = 'Usuario SIATA';
       }
     }
-
-    // Cargar preferencias actuales del servicio
-    const prefs = this.userPreferencesService.getPreferences();
-    this.channelPreferences = { ...prefs.channels };
 
     // Iniciar conexión SignalR después del login
     this.notificationService.startConnection();
@@ -75,7 +85,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   savePreferences(): void {
-    this.userPreferencesService.savePreferences();
+    this.userPreferencesService.savePreferences().subscribe({
+      next: (response) => {
+        console.log('Preferencias guardadas:', response.message);
+      },
+      error: (err) => {
+        console.error('Error al guardar preferencias:', err);
+      }
+    });
   }
 
   toggleSidebar() {
