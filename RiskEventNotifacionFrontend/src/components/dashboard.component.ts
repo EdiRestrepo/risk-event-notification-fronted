@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { UserPreferencesService } from '../services/user-preferences.service';
-import { NotificationService } from '../services/notification.service';
+import { NotificationService, RealTimeAlert } from '../services/notification.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +16,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   isSidebarVisible: boolean = true;
   userName: string = 'Usuario SIATA';
+
+  /** Observable de alertas activas (se usa con async pipe en la vista) */
+  realTimeAlerts$!: Observable<RealTimeAlert[]>;
 
   // Estado de los canales de notificación
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
@@ -35,7 +39,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private userPreferencesService: UserPreferencesService,
     private notificationService: NotificationService
-  ) {}
+  ) {
+    this.realTimeAlerts$ = this.notificationService.alerts$;
+  }
 
   ngOnInit(): void {
     const token = localStorage.getItem('login_status');
@@ -77,6 +83,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.notificationService.stopConnection();
+  }
+
+  removeAlert(alertId: string): void {
+    this.notificationService.removeAlert(alertId);
   }
 
   toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {

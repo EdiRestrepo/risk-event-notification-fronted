@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
 import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
 import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
@@ -31,6 +32,16 @@ export interface NotificationResponse {
 }
 
 /**
+ * Modelo para alertas recibidas en tiempo real desde SignalR
+ */
+export interface RealTimeAlert {
+  id: string;
+  message: string;
+  timestamp: Date;
+  simulated: boolean;
+}
+
+/**
  * Servicio de Notificación
  * Implementa el patrón Factory Method a través de NotificationChannelFactory
  * para enviar notificaciones a través de múltiples canales
@@ -40,7 +51,26 @@ export class NotificationService {
 
   private hubConnection!: signalR.HubConnection;
   private notificationHistory: Notification[] = [];
+  private alertsSubject = new BehaviorSubject<RealTimeAlert[]>([]);
+  private simulationInterval: any = null;
+  private isBackendConnected = false;
 
+  /** Observable público de alertas activas (usar con async pipe en la vista) */
+  public alerts$: Observable<RealTimeAlert[]> = this.alertsSubject.asObservable();
+
+  /** Mensajes simulados para cuando el backend no está disponible */
+  private simulatedMessages: string[] = [
+    'Lluvias intensas previstas en el Valle de Aburrá durante las próximas horas',
+    'Riesgo de deslizamiento en zona rural de Bello - Precaución',
+    'Nivel del río Medellín en aumento - Monitoreo activo',
+    'Alerta por creciente súbita en quebrada La Iguaná',
+    'Probabilidad de granizada en zona nororiental de Medellín',
+    'Vientos fuertes esperados en las próximas 2 horas - Zona sur',
+    'Monitoreo activo de quebrada Santa Elena por lluvias acumuladas',
+    'Alerta temprana por saturación de suelos en Envigado'
+  ];
+
+  constructor(private ngZone: NgZone) {}
   /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
   private creators = new Map<string, NotificationChannelCreator>([
     ['sms', new SMSChannelCreator()],
@@ -229,7 +259,7 @@ export class NotificationService {
     });
   }
 
-    startConnection() {
+  startConnection() {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:44357/notificationHub')
       .withAutomaticReconnect()
@@ -237,11 +267,34 @@ export class NotificationService {
 
     this.hubConnection
       .start()
-      .then(() => console.log('SignalR conectado'))
-      .catch(err => console.error('Error al conectar SignalR:', err));
+      .then(() => {
+        console.log('SignalR conectado - Usando alertas del backend');
+        this.isBackendConnected = true;
+        this.stopSimulation();
+      })
+      .catch(err => {
+        console.warn('Backend no disponible, activando modo simulación:', err.message);
+        this.isBackendConnected = false;
+        this.startSimulation();
+      });
+
+    // Si se reconecta, detener simulación
+    this.hubConnection.onreconnected(() => {
+      console.log('SignalR reconectado - Deteniendo simulación');
+      this.isBackendConnected = true;
+      this.stopSimulation();
+    });
+
+    // Si se desconecta, iniciar simulación
+    this.hubConnection.onclose(() => {
+      console.warn('SignalR desconectado - Activando simulación');
+      this.isBackendConnected = false;
+      this.startSimulation();
+    });
   }
 
   stopConnection() {
+    this.stopSimulation();
     if (this.hubConnection) {
       this.hubConnection.stop()
         .then(() => console.log('SignalR desconectado'));
@@ -249,9 +302,82 @@ export class NotificationService {
   }
 
   receiveNotifications() {
-    this.hubConnection.on('ReceiveNotification', (message) => {
-      alert("Nueva notificación "+ message);
-      console.log('Nueva notificación:', message);
+    this.hubConnection.on('ReceiveNotification', (message: string) => {
+      const alert: RealTimeAlert = {
+        id: `alert_${Date.now()}`,
+        message,
+        timestamp: new Date(),
+        simulated: false
+      };
+      this.pushAlert(alert);
+      console.log('📡 Notificación del backend:', message);
     });
+  }
+
+  /**
+   * Agrega una alerta al array y programa su auto-eliminación.
+   * Todo se ejecuta dentro de NgZone para forzar detección de cambios.
+   */
+  private pushAlert(alert: RealTimeAlert): void {
+    this.ngZone.run(() => {
+      const updated = [alert, ...this.alertsSubject.value];
+      this.alertsSubject.next(updated);
+
+      const duration = alert.simulated ? 10000 : 20000;
+      setTimeout(() => {
+        this.ngZone.run(() => {
+          this.removeAlert(alert.id);
+        });
+      }, duration);
+    });
+  }
+
+  /**
+   * Elimina una alerta del array por ID
+   */
+  removeAlert(alertId: string): void {
+    const updated = this.alertsSubject.value.filter(a => a.id !== alertId);
+    this.alertsSubject.next(updated);
+  }
+
+  /**
+   * Inicia la simulación de alertas cada 20 segundos
+   */
+  private startSimulation(): void {
+    if (this.simulationInterval) return; // Ya está corriendo
+
+    console.log('🔄 Simulación de alertas iniciada (cada 20s)');
+    // Emitir primera alerta inmediatamente
+    this.emitSimulatedAlert();
+
+    this.simulationInterval = setInterval(() => {
+      this.emitSimulatedAlert();
+    }, 20000);
+  }
+
+  /**
+   * Detiene la simulación de alertas
+   */
+  private stopSimulation(): void {
+    if (this.simulationInterval) {
+      clearInterval(this.simulationInterval);
+      this.simulationInterval = null;
+      console.log('🔄 Simulación de alertas detenida');
+    }
+  }
+
+  /**
+   * Emite una alerta simulada aleatoria
+   */
+  private emitSimulatedAlert(): void {
+    const randomIndex = Math.floor(Math.random() * this.simulatedMessages.length);
+    const alert: RealTimeAlert = {
+      id: `sim_${Date.now()}`,
+      message: this.simulatedMessages[randomIndex],
+      timestamp: new Date(),
+      simulated: true
+    };
+    this.pushAlert(alert);
+    console.log('🧪 Alerta simulada:', alert.message);
   }
 }
