@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { NotificationService, RealTimeAlert } from '../services/notification.service';
 
@@ -63,7 +64,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Cargar preferencias desde el backend usando el userId
         const userId = user.id || user.userName;
         console.log('Llamando a loadPreferences con userId:', userId);
-        this.userPreferencesService.loadPreferences(userId).subscribe({
+        this.userPreferencesService.loadPreferences(userId).pipe(
+          timeout(8000) // Timeout de 8 segundos para evitar que quede colgado
+        ).subscribe({
           next: (prefs) => {
             console.log('Preferencias recibidas del backend:', prefs);
             this.channelPreferences = { ...prefs.channels };
@@ -71,13 +74,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Error al cargar preferencias desde el backend:', err);
-            this.preferencesLoaded = true; // Habilitar toggles incluso si falla
+            this.preferencesLoaded = true;
           }
         });
       } catch (e) {
         console.error('Error parsing user data:', e);
         this.userName = 'Usuario SIATA';
+        this.preferencesLoaded = true;
       }
+    } else {
+      // No hay usuario en localStorage, habilitar toggles con valores por defecto
+      this.preferencesLoaded = true;
     }
 
     // Iniciar conexión SignalR después del login
