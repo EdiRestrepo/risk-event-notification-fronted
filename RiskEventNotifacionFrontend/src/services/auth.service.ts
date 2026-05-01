@@ -43,25 +43,16 @@ export class AuthService {
    * Login con fallback: primero intenta contra el backend,
    * si no responde, valida con usuarios demo locales.
    */
-  login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<{ success: boolean }>(this.apiUrl, credentials).pipe(
-      timeout(5000), // Espera máximo 5 segundos por respuesta del backend
-      map(response => ({
-        success: response.success,
-        message: `Bienvenido ${credentials.userName}`,
-        token: 'session-token-' + Date.now(),
-        user: {
-          id: credentials.userName,
-          name: credentials.userName,
-          userName: credentials.userName
-        }
-      })),
-      catchError(error => {
-        console.warn('Backend no disponible, intentando login local...', error.message);
-        return this.loginLocal(credentials);
-      })
-    );
-  }
+ login(credentials: LoginRequest): Observable<LoginResponse> {
+  return this.http.post<LoginResponse>(this.apiUrl, credentials).pipe(
+    timeout(5000),
+    map(response => response),
+    catchError(error => {
+      console.warn('Backend no disponible, intentando login local...', error.message);
+      return this.loginLocal(credentials);
+    })
+  );
+}
 
   /**
    * Login local con usuarios demo (fallback)

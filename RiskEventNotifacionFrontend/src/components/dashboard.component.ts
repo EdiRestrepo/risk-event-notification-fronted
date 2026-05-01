@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -42,7 +42,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private userPreferencesService: UserPreferencesService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {
     this.realTimeAlerts$ = this.notificationService.alerts$;
   }
@@ -62,21 +63,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.userName = user.name || user.userName || 'Usuario SIATA';
 
         // Cargar preferencias desde el backend usando el userId
-        const userId = user.id || user.userName;
-        console.log('Llamando a loadPreferences con userId:', userId);
-        this.userPreferencesService.loadPreferences(userId).pipe(
-          timeout(8000) // Timeout de 8 segundos para evitar que quede colgado
-        ).subscribe({
-          next: (prefs) => {
-            console.log('Preferencias recibidas del backend:', prefs);
-            this.channelPreferences = { ...prefs.channels };
-            this.preferencesLoaded = true;
-          },
-          error: (err) => {
-            console.error('Error al cargar preferencias desde el backend:', err);
-            this.preferencesLoaded = true;
-          }
-        });
+        const userId = user.userName || user.name || user.id;
+
+console.log('Usuario completo desde localStorage:', user);
+console.log('Llamando a loadPreferences con userId:', userId);
+
+this.userPreferencesService.loadPreferences(userId).pipe(
+  timeout(8000)
+).subscribe({
+  next: (prefs) => {
+    console.log('Preferencias mapeadas:', prefs);
+
+     this.channelPreferences = {
+    sms: prefs.channels.sms,
+    email: prefs.channels.email,
+    push: prefs.channels.push,
+    whatsapp: prefs.channels.whatsapp
+    };
+
+    console.log('channelPreferences final:', this.channelPreferences);
+
+  this.preferencesLoaded = true;
+  this.cdr.detectChanges();
+  },
+  error: (err) => {
+    console.error('Error al cargar preferencias:', err);
+    this.preferencesLoaded = true;
+  }
+});
       } catch (e) {
         console.error('Error parsing user data:', e);
         this.userName = 'Usuario SIATA';
