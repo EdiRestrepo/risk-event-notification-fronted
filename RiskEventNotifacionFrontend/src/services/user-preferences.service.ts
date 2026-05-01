@@ -96,40 +96,20 @@ export class UserPreferencesService {
    * Si es la primera vez, el backend retorna todos los canales en false
    */
   loadPreferences(userId: string): Observable<UserNotificationPreferences> {
-    return this.http.get<any>(
-      `${this.apiUrl}/${this.apiUrlPreferences}/${userId}`
-    ).pipe(
+    const url = `${this.apiUrl}/${this.apiUrlPreferences}/${userId}`;
+    console.log('loadPreferences - URL:', url);
+
+    return this.http.get<any>(url).pipe(
       map(response => {
-        console.log('Respuesta cruda del backend (preferencias):', JSON.stringify(response));
+        console.log('loadPreferences - Respuesta cruda:', JSON.stringify(response));
 
-        let channels = { sms: false, email: false, push: false, whatsapp: false };
-
-        if (Array.isArray(response)) {
-          // Si el backend devuelve un array de canales: [{channelName: "sms", active: true}, ...]
-          response.forEach((item: any) => {
-            const name = (item.channelName || item.name || item.channel || '').toLowerCase();
-            const active = item.active === true || item.isActive === true || item.enabled === true;
-            if (name in channels) {
-              (channels as any)[name] = active;
-            }
-          });
-        } else if (response && response.channels) {
-          // Si viene como { channels: { sms: true, ... } }
-          channels = {
-            sms: response.channels.sms === true,
-            email: response.channels.email === true,
-            push: response.channels.push === true,
-            whatsapp: response.channels.whatsapp === true
-          };
-        } else if (response && typeof response === 'object') {
-          // Si viene como objeto plano { sms: true, email: false, ... }
-          channels = {
-            sms: response.sms === true,
-            email: response.email === true,
-            push: response.push === true,
-            whatsapp: response.whatsapp === true
-          };
-        }
+        // Respuesta del backend: {success, message, token, userId, channels: {sms, email, push, whatsapp}}
+        const channels = {
+          sms: response?.channels?.sms === true,
+          email: response?.channels?.email === true,
+          push: response?.channels?.push === true,
+          whatsapp: response?.channels?.whatsapp === true
+        };
 
         this.userPreferences = {
           userId: response?.userId || userId,

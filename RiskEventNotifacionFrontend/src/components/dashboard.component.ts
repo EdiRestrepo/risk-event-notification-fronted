@@ -59,8 +59,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         // Cargar preferencias desde el backend usando el userId
         const userId = user.id || user.userName;
+        console.log('Llamando a loadPreferences con userId:', userId);
         this.userPreferencesService.loadPreferences(userId).subscribe({
           next: (prefs) => {
+            console.log('Preferencias recibidas del backend:', prefs);
             this.channelPreferences = { ...prefs.channels };
           },
           error: (err) => {
