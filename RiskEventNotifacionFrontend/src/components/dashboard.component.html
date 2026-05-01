@@ -1,0 +1,258 @@
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <nav class="sidebar" [class.collapsed]="!isSidebarVisible" style="background: linear-gradient(180deg, #1a3a52 0%, #0f2438 100%); min-height: 100vh; width: 250px; transition: all 0.3s ease; position: fixed; left: 0; top: 0; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+    <div class="logo text-white p-3 border-bottom" style="border-color: rgba(255,255,255,0.1);">
+      <i class="bi bi-fire" style="font-size: 1.5rem; color: #ff6b35;"></i>
+      <span class="ms-2 fw-bold" *ngIf="isSidebarVisible">Alerta Valle</span>
+    </div>
+
+    <div class="nav-menu mt-3">
+      <a href="#" class="nav-link text-white-50 px-3 py-2 d-flex align-items-center" style="text-decoration: none; transition: all 0.3s;">
+        <i class="bi bi-map" style="font-size: 1.2rem; color: #ff6b35; min-width: 30px;"></i>
+        <span *ngIf="isSidebarVisible" class="ms-3">Mapa de Riesgo</span>
+      </a>
+      <a href="#" class="nav-link text-white-50 px-3 py-2 d-flex align-items-center" style="text-decoration: none; transition: all 0.3s;">
+        <i class="bi bi-bell" style="font-size: 1.2rem; color: #ff6b35; min-width: 30px;"></i>
+        <span *ngIf="isSidebarVisible" class="ms-3">Alertas Recientes</span>
+      </a>
+      <a href="#" class="nav-link text-white-50 px-3 py-2 d-flex align-items-center" style="text-decoration: none; transition: all 0.3s;">
+        <i class="bi bi-exclamation-triangle" style="font-size: 1.2rem; color: #ff6b35; min-width: 30px;"></i>
+        <span *ngIf="isSidebarVisible" class="ms-3">Reportar Emergencia</span>
+      </a>
+      <a href="#" class="nav-link text-white-50 px-3 py-2 d-flex align-items-center" style="text-decoration: none; transition: all 0.3s;">
+        <i class="bi bi-sliders" style="font-size: 1.2rem; color: #ff6b35; min-width: 30px;"></i>
+        <span *ngIf="isSidebarVisible" class="ms-3">Preferencias</span>
+      </a>
+    </div>
+
+    <div class="logout-section position-absolute bottom-0 w-100 p-3 border-top" style="border-color: rgba(255,255,255,0.1);">
+      <button (click)="logout()" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" style="color: #ff6b35; border-color: #ff6b35;">
+        <i class="bi bi-box-arrow-left"></i>
+        <span *ngIf="isSidebarVisible" class="ms-2">Cerrar Sesión</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" [style.margin-left]="isSidebarVisible ? '250px' : '80px'" style="transition: all 0.3s ease;">
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+      <div class="container-fluid">
+        <button
+          class="btn btn-outline-secondary me-3"
+          (click)="toggleSidebar()"
+          style="border: none;">
+          <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+        </button>
+
+        <span class="navbar-text fw-bold flex-grow-1">
+          Bienvenido, <span style="color: #ff6b35;">{{ userName }}</span>
+        </span>
+
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-light position-relative">
+            <i class="bi bi-bell" style="font-size: 1.2rem;"></i>
+            <span *ngIf="(realTimeAlerts$ | async)?.length" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ (realTimeAlerts$ | async)?.length }}
+            </span>
+          </button>
+          <img src="https://via.placeholder.com/40" alt="Usuario" class="rounded-circle" style="cursor: pointer;">
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <section class="content-area p-4">
+      <!-- Alert Banner -->
+      <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background-color: #fff3cd; border-left: 5px solid #ff6b35;">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem; color: #ff6b35;"></i>
+          <div>
+            <strong>ALERTA NARANJA</strong>
+            <p class="mb-0 text-muted">Se prevén lluvias intensas durante las próximas horas en el Valle de Aburrá. Posibilidad de crecientes súbitas en quebradas e inundaciones urbanas.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-top: 5px solid #ff6b35;">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="text-muted mb-0 small">Nivel de Riesgo</p>
+                  <h3 class="mb-0" style="color: #ff6b35;">NARANJA</h3>
+                </div>
+                <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #ff6b35; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-top: 5px solid #1a3a52;">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="text-muted mb-0 small">Municipios Afectados</p>
+                  <h3 class="mb-0">5</h3>
+                </div>
+                <i class="bi bi-map" style="font-size: 2rem; color: #1a3a52; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-top: 5px solid #0066cc;">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="text-muted mb-0 small">Probabilidad de Lluvia</p>
+                  <h3 class="mb-0">80%</h3>
+                </div>
+                <i class="bi bi-cloud-rain" style="font-size: 2rem; color: #0066cc; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-top: 5px solid #28a745;">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="text-muted mb-0 small">Última Actualización</p>
+                  <h6 class="mb-0">23 may, 09:25</h6>
+                </div>
+                <i class="bi bi-clock" style="font-size: 2rem; color: #28a745; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="row g-4">
+        <!-- Alerts Section -->
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="bi bi-bell-fill" style="color: #ff6b35;"></i> Alertas Recientes
+              </h5>
+            </div>
+            <div class="card-body">
+              <ng-container *ngIf="realTimeAlerts$ | async as alerts">
+                <div class="timeline" *ngIf="alerts.length > 0; else noAlerts">
+                  <div *ngFor="let alert of alerts" class="timeline-item mb-3 pb-3 border-bottom">
+                    <div class="d-flex">
+                      <div class="timeline-marker" style="width: 30px; height: 30px; background-color: #ff6b35; border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="bi bi-bell-fill text-white" style="font-size: 0.8rem;"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <h6 class="mb-1">{{ alert.message }}</h6>
+                          <button class="btn btn-sm btn-link text-muted p-0" (click)="removeAlert(alert.id)" title="Descartar">
+                            <i class="bi bi-x-lg"></i>
+                          </button>
+                        </div>
+                        <p class="text-muted small mb-0">{{ alert.timestamp | date:'hh:mm:ss a' }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noAlerts>
+                <div class="text-center text-muted py-4">
+                  <i class="bi bi-bell-slash" style="font-size: 2rem;"></i>
+                  <p class="mt-2 mb-0">No hay alertas recientes. Las notificaciones aparecerán aquí en tiempo real.</p>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Channels Section -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="bi bi-megaphone" style="color: #ff6b35;"></i> Canales de Notificación
+              </h5>
+            </div>
+            <div class="card-body">
+              <p class="text-muted small mb-4">Elige cómo quieres recibir nuestras alertas:</p>
+
+              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-phone-fill" style="font-size: 1.5rem; color: #0066cc; margin-right: 10px;"></i>
+                  <div>
+                    <h6 class="mb-0">App Alerta Valle</h6>
+                    <small [class]="channelPreferences.push ? 'text-success' : 'text-muted'">
+                      {{ channelPreferences.push ? 'Activo' : 'Inactivo' }}
+                    </small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.push" (change)="toggleChannel('push')" [disabled]="!preferencesLoaded">
+                </div>
+              </div>
+
+              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-chat-left-dots-fill" style="font-size: 1.5rem; color: #25d366; margin-right: 10px;"></i>
+                  <div>
+                    <h6 class="mb-0">SMS</h6>
+                    <small [class]="channelPreferences.sms ? 'text-success' : 'text-muted'">
+                      {{ channelPreferences.sms ? 'Activo' : 'Inactivo' }}
+                    </small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.sms" (change)="toggleChannel('sms')" [disabled]="!preferencesLoaded">
+                </div>
+              </div>
+
+              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-envelope-fill" style="font-size: 1.5rem; color: #ea4335; margin-right: 10px;"></i>
+                  <div>
+                    <h6 class="mb-0">Correo Electrónico</h6>
+                    <small [class]="channelPreferences.email ? 'text-success' : 'text-muted'">
+                      {{ channelPreferences.email ? 'Activo' : 'Inactivo' }}
+                    </small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.email" (change)="toggleChannel('email')" [disabled]="!preferencesLoaded">
+                </div>
+              </div>
+
+              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-chat-bubble-fill" style="font-size: 1.5rem; color: #0a7e5c; margin-right: 10px;"></i>
+                  <div>
+                    <h6 class="mb-0">WhatsApp</h6>
+                    <small [class]="channelPreferences.whatsapp ? 'text-success' : 'text-muted'">
+                      {{ channelPreferences.whatsapp ? 'Activo' : 'Inactivo' }}
+                    </small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.whatsapp" (change)="toggleChannel('whatsapp')" [disabled]="!preferencesLoaded">
+                </div>
+              </div>
+
+              <button class="btn btn-sm w-100" style="background-color: #ff6b35; color: white; border: none;" (click)="savePreferences()">
+                <i class="bi bi-save"></i> Guardar preferencias
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

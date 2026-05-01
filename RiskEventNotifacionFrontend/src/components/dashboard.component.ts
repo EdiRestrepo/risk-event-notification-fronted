@@ -1,0 +1,159 @@
+import { Component, OnInit, OnDestroy, ChangeDetectorRef  } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
+import { UserPreferencesService } from '../services/user-preferences.service';
+import { NotificationService, RealTimeAlert } from '../services/notification.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
+})
+export class DashboardComponent implements OnInit, OnDestroy {
+
+  isSidebarVisible: boolean = true;
+  userName: string = 'Usuario SIATA';
+
+  /** Observable de alertas activas (se usa con async pipe en la vista) */
+  realTimeAlerts$!: Observable<RealTimeAlert[]>;
+
+  /** Flag para saber si las preferencias ya se cargaron del backend */
+  preferencesLoaded = false;
+
+  // Estado de los canales de notificación
+  channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
+    sms: false,
+    email: false,
+    push: false,
+    whatsapp: false
+  };
+
+  menuOptions = [
+    { label: 'Mapa de Riesgo', icon: 'map', path: '/dashboard/mapa' },
+    { label: 'Alertas Recientes', icon: 'notifications', path: '/dashboard/alertas' },
+    { label: 'Reportar Emergencia', icon: 'report_problem', path: '/dashboard/reportar' },
+    { label: 'Configuración', icon: 'settings', path: '/dashboard/config' }
+  ];
+
+  constructor(
+    private router: Router,
+    private userPreferencesService: UserPreferencesService,
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.realTimeAlerts$ = this.notificationService.alerts$;
+  }
+
+  ngOnInit(): void {
+    const token = localStorage.getItem('login_status');
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Obtener el nombre del usuario de localStorage
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        const user = JSON.parse(currentUser);
+        this.userName = user.name || user.userName || 'Usuario SIATA';
+
+        // Cargar preferencias desde el backend usando el userId
+        const userId = user.userName || user.name || user.id;
+
+console.log('Usuario completo desde localStorage:', user);
+console.log('Llamando a loadPreferences con userId:', userId);
+
+this.userPreferencesService.loadPreferences(userId).pipe(
+  timeout(8000)
+).subscribe({
+  next: (prefs) => {
+    console.log('Preferencias mapeadas:', prefs);
+
+     this.channelPreferences = {
+    sms: prefs.channels.sms,
+    email: prefs.channels.email,
+    push: prefs.channels.push,
+    whatsapp: prefs.channels.whatsapp
+    };
+
+    console.log('channelPreferences final:', this.channelPreferences);
+
+  this.preferencesLoaded = true;
+  this.cdr.detectChanges();
+  },
+  error: (err) => {
+    console.error('Error al cargar preferencias:', err);
+    this.preferencesLoaded = true;
+  }
+});
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        this.userName = 'Usuario SIATA';
+        this.preferencesLoaded = true;
+      }
+    } else {
+      // No hay usuario en localStorage, habilitar toggles con valores por defecto
+      this.preferencesLoaded = true;
+    }
+
+    // Iniciar conexión SignalR después del login
+    this.notificationService.startConnection();
+    this.notificationService.receiveNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.notificationService.stopConnection();
+  }
+
+  removeAlert(alertId: string): void {
+    this.notificationService.removeAlert(alertId);
+  }
+
+  toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {
+    // Primero actualizar estado local
+    this.channelPreferences[channel] = !this.channelPreferences[channel];
+    // Sincronizar con el servicio
+    if (this.channelPreferences[channel]) {
+      this.userPreferencesService.enableChannel(channel);
+    } else {
+      this.userPreferencesService.disableChannel(channel);
+    }
+  }
+
+  savePreferences(): void {
+    this.userPreferencesService.savePreferences().subscribe({
+      next: (response) => {
+        console.log('Preferencias guardadas:', response.message);
+        // Actualizar la vista con lo que devolvió el backend
+        if (response.channels) {
+          this.channelPreferences = {
+            sms: response.channels.sms === true,
+            email: response.channels.email === true,
+            push: response.channels.push === true,
+            whatsapp: response.channels.whatsapp === true
+          };
+        }
+      },
+      error: (err) => {
+        console.error('Error al guardar preferencias:', err);
+      }
+    });
+  }
+
+  toggleSidebar() {
+    this.isSidebarVisible = !this.isSidebarVisible;
+  }
+
+  logout() {
+    localStorage.removeItem('login_status');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    this.router.navigate(['/login']);
+  }
+}
+
