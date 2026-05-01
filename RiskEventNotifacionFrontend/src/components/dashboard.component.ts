@@ -22,9 +22,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Estado de los canales de notificación
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
-    sms: true,
-    email: true,
-    push: true,
+    sms: false,
+    email: false,
+    push: false,
     whatsapp: false
   };
 
@@ -65,9 +65,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Error al cargar preferencias desde el backend:', err);
-            // Usar valores por defecto si falla la carga
-            const prefs = this.userPreferencesService.getPreferences();
-            this.channelPreferences = { ...prefs.channels };
           }
         });
       } catch (e) {
