@@ -197,7 +197,7 @@
                   </div>
                 </div>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.push" (change)="toggleChannel('push')">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.push" (change)="toggleChannel('push')" [disabled]="!preferencesLoaded">
                 </div>
               </div>
 
@@ -212,7 +212,7 @@
                   </div>
                 </div>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.sms" (change)="toggleChannel('sms')">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.sms" (change)="toggleChannel('sms')" [disabled]="!preferencesLoaded">
                 </div>
               </div>
 
@@ -227,7 +227,7 @@
                   </div>
                 </div>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.email" (change)="toggleChannel('email')">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.email" (change)="toggleChannel('email')" [disabled]="!preferencesLoaded">
                 </div>
               </div>
 
@@ -242,7 +242,7 @@
                   </div>
                 </div>
                 <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.whatsapp" (change)="toggleChannel('whatsapp')">
+                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.whatsapp" (change)="toggleChannel('whatsapp')" [disabled]="!preferencesLoaded">
                 </div>
               </div>
 

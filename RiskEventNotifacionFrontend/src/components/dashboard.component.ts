@@ -20,6 +20,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Observable de alertas activas (se usa con async pipe en la vista) */
   realTimeAlerts$!: Observable<RealTimeAlert[]>;
 
+  /** Flag para saber si las preferencias ya se cargaron del backend */
+  preferencesLoaded = false;
+
   // Estado de los canales de notificación
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
     sms: false,
@@ -64,9 +67,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           next: (prefs) => {
             console.log('Preferencias recibidas del backend:', prefs);
             this.channelPreferences = { ...prefs.channels };
+            this.preferencesLoaded = true;
           },
           error: (err) => {
             console.error('Error al cargar preferencias desde el backend:', err);
+            this.preferencesLoaded = true; // Habilitar toggles incluso si falla
           }
         });
       } catch (e) {
@@ -89,8 +94,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {
-    const newState = this.userPreferencesService.toggleChannel(channel);
-    this.channelPreferences[channel] = newState;
+    // Primero actualizar estado local
+    this.channelPreferences[channel] = !this.channelPreferences[channel];
+    // Sincronizar con el servicio
+    if (this.channelPreferences[channel]) {
+      this.userPreferencesService.enableChannel(channel);
+    } else {
+      this.userPreferencesService.disableChannel(channel);
+    }
   }
 
   savePreferences(): void {
