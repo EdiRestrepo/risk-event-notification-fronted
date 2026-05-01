@@ -46,7 +46,9 @@ export interface SavePreferencesResponse {
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
 
-  private apiUrl = 'https://localhost:44357/api/preferences';
+  private apiUrl = 'https://localhost:44357/api/channels';
+  private apiUrlPreferences = 'preferences';
+  private apiUrlSavePreferences = 'savepreferences';
 
   /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
   private creators = new Map<string, NotificationChannelCreator>([
@@ -95,7 +97,7 @@ export class UserPreferencesService {
    */
   loadPreferences(userId: string): Observable<UserNotificationPreferences> {
     return this.http.get<{ userId: string; channels: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } }>(
-      `${this.apiUrl}/${userId}`
+      `${this.apiUrl}/${this.apiUrlPreferences}/${userId}`
     ).pipe(
       map(response => {
         this.userPreferences = {
@@ -130,7 +132,7 @@ export class UserPreferencesService {
     };
 
     return this.http.put<SavePreferencesResponse>(
-      `${this.apiUrl}/${userId}`, body
+      `${this.apiUrl}/${this.apiUrlSavePreferences}/${userId}`, body
     ).pipe(
       tap(response => {
         console.log('Preferencias guardadas exitosamente:', response);

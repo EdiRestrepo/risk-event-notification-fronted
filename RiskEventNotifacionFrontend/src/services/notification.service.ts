@@ -275,7 +275,7 @@ export class NotificationService {
       .catch(err => {
         console.warn('Backend no disponible, activando modo simulación:', err.message);
         this.isBackendConnected = false;
-        this.startSimulation();
+        //this.startSimulation();
       });
 
     // Si se reconecta, detener simulación
@@ -289,7 +289,7 @@ export class NotificationService {
     this.hubConnection.onclose(() => {
       console.warn('SignalR desconectado - Activando simulación');
       this.isBackendConnected = false;
-      this.startSimulation();
+      //this.startSimulation();
     });
   }
 
@@ -303,6 +303,7 @@ export class NotificationService {
 
   receiveNotifications() {
     this.hubConnection.on('ReceiveNotification', (message: string) => {
+      window.alert("Has recibido una nueva alerta");
       const alert: RealTimeAlert = {
         id: `alert_${Date.now()}`,
         message,
