@@ -167,7 +167,15 @@ export class UserPreferencesService {
     ).pipe(
       tap(response => {
         console.log('Preferencias guardadas exitosamente:', response);
-        // Actualizar canales activos después de guardar
+        // Actualizar estado local con lo que devuelve el backend
+        if (response.channels) {
+          this.userPreferences.channels = {
+            sms: response.channels.sms === true,
+            email: response.channels.email === true,
+            push: response.channels.push === true,
+            whatsapp: response.channels.whatsapp === true
+          };
+        }
         this.initializeChannels();
       }),
       catchError(error => {

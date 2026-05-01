@@ -108,6 +108,7 @@
         "body": {
           "success": "boolean",
           "message": "string",
+          "token":"string",
           "userId": "string",
           "channels": {
             "sms": "boolean",

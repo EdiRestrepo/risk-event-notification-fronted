@@ -95,6 +95,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userPreferencesService.savePreferences().subscribe({
       next: (response) => {
         console.log('Preferencias guardadas:', response.message);
+        // Actualizar la vista con lo que devolvió el backend
+        if (response.channels) {
+          this.channelPreferences = {
+            sms: response.channels.sms === true,
+            email: response.channels.email === true,
+            push: response.channels.push === true,
+            whatsapp: response.channels.whatsapp === true
+          };
+        }
       },
       error: (err) => {
         console.error('Error al guardar preferencias:', err);
