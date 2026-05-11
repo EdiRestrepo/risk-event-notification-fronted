@@ -454,6 +454,105 @@ El proyecto utiliza Bootstrap 5 para:
 ## 🔄 Flujo de Autenticación
 
 1. Usuario ingresa credenciales en el login
+
+## 📊 Diagrama UML - Patrón Decorator
+
+### Estructura Completa del Patrón Decorator (GoF)
+
+```
+┌────────────────────────────────────────────────┐
+│        <<interface>>                           │
+│        AlertMessage                            │
+│        (Component)                             │
+├────────────────────────────────────────────────┤
+│ + getTitle(): string                           │
+│ + getBody(): string                            │
+│ + getMetadata(): Record<string, string>        │
+└────────────────────────────────────────────────┘
+         ▲                           ▲
+         │ implements                │ implements
+         │                           │
+┌────────┴─────────────────────┐   ┌┴──────────────────────────────────────┐
+│ BaseAlertMessage             │   │ <<abstract>>                          │
+│ (ConcreteComponent)          │   │ AlertMessageDecorator                 │
+├──────────────────────────────┤   │ (Decorator)                           │
+│ - title: string              │   ├───────────────────────────────────────┤
+│ - body: string               │   │ # wrappee: AlertMessage               │
+├──────────────────────────────┤   ├───────────────────────────────────────┤
+│ + getTitle(): string         │   │ + AlertMessageDecorator(wrappee)      │
+│ + getBody(): string          │   │ + getTitle(): string                  │
+│ + getMetadata(): {...}       │   │ + getBody(): string                   │
+└──────────────────────────────┘   │ + getMetadata(): {...}               │
+                                    └────────┬────────────────────────────┘
+                                             ▲
+                                             │ extends
+               ┌─────────────────────────────┼────────────────────────────┬─────────────────────────┬──────────────────────────┐
+               │                             │                            │                         │                          │
+    ┌──────────┴───────────┐   ┌──────────┴────────────┐  ┌─────────┴──────────────┐  ┌────────┴─────────────────┐  ┌──────┴────────────────┐
+    │ RiskLevelAlert       │   │ LocationAlertDecorator│  │ SafetyRecommendation  │  │ PriorityAlertDecorator   │  │ TimestampAlertDecorator
+    │ Decorator            │   │ (ConcreteDecorator)   │  │ AlertDecorator        │  │ (ConcreteDecorator)      │  │ (ConcreteDecorator)
+    ├──────────────────────┤   ├──────────────────────┤  │ (ConcreteDecorator)   │  ├──────────────────────────┤  ├──────────────────────┤
+    │ - riskLevel: string  │   │ - locations: string[]│  ├──────────────────────┤  │ - priority: 'Alta'|      │  │ - timestamp: Date    │
+    ├──────────────────────┤   ├──────────────────────┤  │ - recommendation:     │  │        'Media'|'Baja'    │  ├──────────────────────┤
+    │ + getTitle()         │   │ + getBody()          │  │       string          │  ├──────────────────────────┤  │ + getBody()          │
+    │ + getMetadata()      │   │ + getMetadata()      │  ├──────────────────────┤  │ + getBody()              │  │ + getMetadata()      │
+    └──────────────────────┘   └──────────────────────┘  │ + getBody()          │  │ + getMetadata()          │  └──────────────────────┘
+                                                          │ + getMetadata()      │  └──────────────────────────┘
+                                                          └──────────────────────┘
+
+    ┌──────────────────────────────┐
+    │ PlainLanguageAlertDecorator   │
+    │ (ConcreteDecorator)           │
+    ├──────────────────────────────┤
+    │                              │
+    ├──────────────────────────────┤
+    │ + getBody()                  │
+    │ + getMetadata()              │
+    └──────────────────────────────┘
+```
+
+### Relaciones del Patrón
+
+**Composición (Has-a):**
+- Cada `AlertMessageDecorator` envuelve un `AlertMessage` mediante el atributo `wrappee`
+- Permite encadenamiento dinámico: `Decorator → Decorator → Decorator → ConcreteComponent`
+
+**Implementación:**
+- `BaseAlertMessage` implementa directamente la interfaz `AlertMessage`
+- Todos los decoradores concretos extienden `AlertMessageDecorator`
+- Cada decorador puede sobrescribir los métodos que necesita enriquecer
+
+### Ejemplo de Composición en Tiempo de Ejecución
+
+```typescript
+// 1. Crear componente base
+let alert: AlertMessage = new BaseAlertMessage(
+  'Lluvias intensas',
+  'Se prevén lluvias intensas durante las próximas horas.'
+);
+
+// 2. Aplicar decoradores secuencialmente (cada uno envuelve el anterior)
+alert = new RiskLevelAlertDecorator(alert, 'NARANJA');
+alert = new LocationAlertDecorator(alert, ['Medellín', 'Bello']);
+alert = new SafetyRecommendationAlertDecorator(alert, 'Evite quebradas.');
+alert = new PriorityAlertDecorator(alert, 'Alta');
+alert = new TimestampAlertDecorator(alert, new Date());
+alert = new PlainLanguageAlertDecorator(alert);
+
+// 3. Resultado final: mensaje enriquecido con múltiples capas
+console.log(alert.getTitle());     // [ALERTA NARANJA] Lluvias intensas
+console.log(alert.getBody());      // Body enriquecido con ubicación, recomendación, prioridad, timestamp, lenguaje claro
+console.log(alert.getMetadata());  // Metadata consolidada de todos los decoradores
+```
+
+### Ventajas de esta Implementación
+
+✅ **Flexibilidad**: Combina decoradores en cualquier orden y cantidad
+✅ **Extensibilidad**: Agregar nuevos decoradores sin modificar existentes (OCP)
+✅ **Composición dinámica**: Los decoradores se aplican en tiempo de ejecución
+✅ **Responsabilidad única**: Cada decorador agrega un aspecto específico (SRP)
+✅ **Sustituibilidad**: Cualquier decorador es sustituible por otro (LSP)
+✅ **Independencia**: Los decoradores no conocen entre sí, solo del `wrappee`
 2. Se envía solicitud al backend (`https://localhost:44357/api/auth/login`)
 3. Si es válido, se guarda el estado de login en localStorage
 4. Se redirige al dashboard
