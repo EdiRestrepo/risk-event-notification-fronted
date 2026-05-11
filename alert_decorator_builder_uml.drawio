@@ -1,0 +1,116 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="UML Decorator Builder Alert" id="0">
+    <mxGraphModel dx="1664" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dashboard" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;DashboardComponent&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CLIENT)&lt;/i&gt;&lt;hr&gt;- alertMessageBuilder: AlertMessageBuilderService&lt;br&gt;- notificationService: NotificationService&lt;br&gt;- channelPreferences: {sms, email, push, whatsapp}&lt;hr&gt;+ sendCriticalRainAlert(): void&lt;br&gt;+ sendLandslideAlert(): void&lt;br&gt;+ sendFloodAlert(): void&lt;br&gt;- getActiveChannels(): string[]&lt;br&gt;- getUserId(): string" vertex="1">
+          <mxGeometry height="220" width="520" x="500" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="builder" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#fff2cc;fontSize=13;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;AlertMessageBuilderService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(BUILDER)&lt;/i&gt;&lt;hr&gt;+ buildCriticalRainAlert(): AlertMessage&lt;br&gt;+ buildLandslideAlert(): AlertMessage&lt;br&gt;+ buildFloodAlert(): AlertMessage&lt;br&gt;+ createBuilder(): FluentBuilder" vertex="1">
+          <mxGeometry height="150" width="440" x="540" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="alertMessage" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&quot;text-align: center;&quot;&gt;&lt;i style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;b&gt;&lt;div style=&quot;text-align: center;&quot;&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;AlertMessage&lt;/b&gt;&lt;/div&gt;&lt;/b&gt;&lt;i&gt;&lt;div style=&quot;text-align: center;&quot;&gt;&lt;i style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;(Component)&lt;/i&gt;&lt;/div&gt;&lt;/i&gt;&lt;hr&gt;+ getTitle(): string&lt;br&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="150" width="520" x="500" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="baseAlert" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#d5e8d4;fontSize=13;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;BaseAlertMessage&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteComponent)&lt;/i&gt;&lt;hr&gt;- title: string&lt;br&gt;- body: string&lt;hr&gt;+ getTitle(): string&lt;br&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="180" width="360" x="240" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="abstractDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=13;align=left;verticalAlign=top;spacing=8;" value="&lt;i&gt;&amp;lt;&amp;lt;abstract&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;AlertMessageDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(Decorator)&lt;/i&gt;&lt;hr&gt;# wrappee: AlertMessage&lt;hr&gt;+ AlertMessageDecorator(wrappee)&lt;br&gt;+ getTitle(): string&lt;br&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="210" width="410" x="890" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="riskDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;RiskLevelAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;- riskLevel: string&lt;hr&gt;+ getTitle(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="290" x="40" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="locationDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;LocationAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;- locations: string[]&lt;hr&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="290" x="360" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="safetyDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;SafetyRecommendationAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;- recommendation: string&lt;hr&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="320" x="680" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="priorityDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;PriorityAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;- priority: string&lt;hr&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="290" x="1030" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="timestampDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;TimestampAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;- timestamp: Date&lt;hr&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="290" x="1350" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="plainDecorator" parent="1" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" value="&lt;b&gt;PlainLanguageAlertDecorator&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ConcreteDecorator)&lt;/i&gt;&lt;hr&gt;+ getBody(): string&lt;br&gt;+ getMetadata(): Record&amp;lt;string, string&amp;gt;" vertex="1">
+          <mxGeometry height="130" width="320" x="680" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeDashboardBuilder" edge="1" parent="1" source="dashboard" style="endArrow=block;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="builder" value="solicita alertas decoradas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="notificationNote" parent="1" style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#f5f5f5;fontSize=12;" value="usa NotificationService para enviar por canales activos" vertex="1">
+          <mxGeometry height="100" width="260" x="1110" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeDashboardNotification" edge="1" parent="1" source="dashboard" style="endArrow=open;dashed=1;html=1;rounded=0;strokeColor=#666666;fontSize=12;" target="notificationNote" value="uses">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeBuilderAlertMessage" edge="1" parent="1" source="builder" style="endArrow=block;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="alertMessage" value="construye mediante">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeBaseImplements" edge="1" parent="1" source="baseAlert" style="endArrow=block;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="alertMessage" value="implements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeDecoratorImplements" edge="1" parent="1" source="abstractDecorator" style="endArrow=block;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="alertMessage" value="implements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeWrappee" edge="1" parent="1" source="abstractDecorator" style="endArrow=diamondThin;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="alertMessage" value="wrappee">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="890" />
+              <mxPoint x="1350" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edgeRiskExtends" edge="1" parent="1" source="riskDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="185" y="1060" />
+              <mxPoint x="1095" y="1060" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edgeLocationExtends" edge="1" parent="1" source="locationDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="505" y="1060" />
+              <mxPoint x="1095" y="1060" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edgeSafetyExtends" edge="1" parent="1" source="safetyDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgePriorityExtends" edge="1" parent="1" source="priorityDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeTimestampExtends" edge="1" parent="1" source="timestampDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1495" y="1060" />
+              <mxPoint x="1095" y="1060" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edgePlainExtends" edge="1" parent="1" source="plainDecorator" style="endArrow=block;endFill=0;html=1;rounded=0;strokeColor=#333333;fontSize=12;edgeStyle=orthogonalEdgeStyle;" target="abstractDecorator" value="extends">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="1310" />
+              <mxPoint x="1020" y="1310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="patternLabel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=16;fontStyle=1;align=center;" value="Patrones aplicados: Builder + Decorator" vertex="1">
+          <mxGeometry height="60" width="360" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="builderNote" parent="1" style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#fff2cc;fontSize=12;" value="Builder: encapsula la construcción de mensajes de alerta preconfigurados." vertex="1">
+          <mxGeometry height="90" width="300" x="80" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="decoratorNote" parent="1" style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#f8cecc;fontSize=12;" value="Decorator: permite agregar riesgo, ubicación, prioridad, fecha, recomendación y lenguaje claro sin modificar BaseAlertMessage." vertex="1">
+          <mxGeometry height="120" width="320" x="1330" y="810" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
