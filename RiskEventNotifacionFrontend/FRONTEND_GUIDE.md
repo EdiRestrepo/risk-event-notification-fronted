@@ -455,60 +455,179 @@ El proyecto utiliza Bootstrap 5 para:
 
 1. Usuario ingresa credenciales en el login
 
-## 📊 Diagrama UML - Patrón Decorator
+## 📊 Diagrama UML - Patrón Decorator (Completo con Cliente)
 
-### Estructura Completa del Patrón Decorator (GoF)
+### Estructura Completa del Patrón Decorator (GoF) - Con DashboardComponent como Cliente
 
 ```
-┌────────────────────────────────────────────────┐
-│        <<interface>>                           │
-│        AlertMessage                            │
-│        (Component)                             │
-├────────────────────────────────────────────────┤
-│ + getTitle(): string                           │
-│ + getBody(): string                            │
-│ + getMetadata(): Record<string, string>        │
-└────────────────────────────────────────────────┘
-         ▲                           ▲
-         │ implements                │ implements
-         │                           │
-┌────────┴─────────────────────┐   ┌┴──────────────────────────────────────┐
-│ BaseAlertMessage             │   │ <<abstract>>                          │
-│ (ConcreteComponent)          │   │ AlertMessageDecorator                 │
-├──────────────────────────────┤   │ (Decorator)                           │
-│ - title: string              │   ├───────────────────────────────────────┤
-│ - body: string               │   │ # wrappee: AlertMessage               │
-├──────────────────────────────┤   ├───────────────────────────────────────┤
-│ + getTitle(): string         │   │ + AlertMessageDecorator(wrappee)      │
-│ + getBody(): string          │   │ + getTitle(): string                  │
-│ + getMetadata(): {...}       │   │ + getBody(): string                   │
-└──────────────────────────────┘   │ + getMetadata(): {...}               │
-                                    └────────┬────────────────────────────┘
-                                             ▲
-                                             │ extends
-               ┌─────────────────────────────┼────────────────────────────┬─────────────────────────┬──────────────────────────┐
-               │                             │                            │                         │                          │
-    ┌──────────┴───────────┐   ┌──────────┴────────────┐  ┌─────────┴──────────────┐  ┌────────┴─────────────────┐  ┌──────┴────────────────┐
-    │ RiskLevelAlert       │   │ LocationAlertDecorator│  │ SafetyRecommendation  │  │ PriorityAlertDecorator   │  │ TimestampAlertDecorator
-    │ Decorator            │   │ (ConcreteDecorator)   │  │ AlertDecorator        │  │ (ConcreteDecorator)      │  │ (ConcreteDecorator)
-    ├──────────────────────┤   ├──────────────────────┤  │ (ConcreteDecorator)   │  ├──────────────────────────┤  ├──────────────────────┤
-    │ - riskLevel: string  │   │ - locations: string[]│  ├──────────────────────┤  │ - priority: 'Alta'|      │  │ - timestamp: Date    │
-    ├──────────────────────┤   ├──────────────────────┤  │ - recommendation:     │  │        'Media'|'Baja'    │  ├──────────────────────┤
-    │ + getTitle()         │   │ + getBody()          │  │       string          │  ├──────────────────────────┤  │ + getBody()          │
-    │ + getMetadata()      │   │ + getMetadata()      │  ├──────────────────────┤  │ + getBody()              │  │ + getMetadata()      │
-    └──────────────────────┘   └──────────────────────┘  │ + getBody()          │  │ + getMetadata()          │  └──────────────────────┘
-                                                          │ + getMetadata()      │  └──────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                         DashboardComponent (CLIENT)                                  │
+│                                                                                      │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│ - alertMessageBuilder: AlertMessageBuilderService                                   │
+│ - notificationService: NotificationService                                          │
+│ - channelPreferences: {sms, email, push, whatsapp}                                  │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│ + sendCriticalRainAlert(): void                                                     │
+│ + sendLandslideAlert(): void                                                        │
+│ + sendFloodAlert(): void                                                            │
+│ - getActiveChannels(): string[]                                                     │
+│ - getUserId(): string                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+         │                                                                              │
+         │ solicita                                                                    │ uses
+         │ alertas                                                                     │
+         │ decoradas                                                                   │
+         │                                                                              │
+         ▼                                                                              │
+┌──────────────────────────────────────────────────────────────────┐                   │
+│  AlertMessageBuilderService (BUILDER)                            │                   │
+├──────────────────────────────────────────────────────────────────┤                   │
+│ + buildCriticalRainAlert(): AlertMessage                         │                   │
+│ + buildLandslideAlert(): AlertMessage                            │                   │
+│ + buildFloodAlert(): AlertMessage                                │                   │
+│ + createBuilder(): FluentBuilder                                 │                   │
+└──────────────────────────────────────────────────────────────────┘                   │
+                 │                                                                      │
+                 │ construye mediante                                                  │
+                 │                                                                      │
+                 ▼                                                                      │
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│        <<interface>>                                                                  │
+│        AlertMessage                                                                   │
+│        (Component)                                                                    │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ + getTitle(): string                                                                  │
+│ + getBody(): string                                                                   │
+│ + getMetadata(): Record<string, string>                                              │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+         ▲                                      ▲
+         │ implements                           │ implements
+         │                                      │
+┌────────┴──────────────────────────┐   ┌──────┴────────────────────────────────────────┐
+│ BaseAlertMessage                  │   │ <<abstract>>                                  │
+│ (ConcreteComponent)               │   │ AlertMessageDecorator                         │
+├───────────────────────────────────┤   │ (Decorator)                                   │
+│ - title: string                   │   ├───────────────────────────────────────────────┤
+│ - body: string                    │   │ # wrappee: AlertMessage                       │
+├───────────────────────────────────┤   ├───────────────────────────────────────────────┤
+│ + getTitle(): string              │   │ + AlertMessageDecorator(wrappee)              │
+│ + getBody(): string               │   │ + getTitle(): string                          │
+│ + getMetadata(): Record<...>      │   │ + getBody(): string                           │
+└───────────────────────────────────┘   │ + getMetadata(): Record<...>                  │
+                                        └───────┬────────────────────────────────────────┘
+                                                ▲
+                                                │ extends
+                ┌───────────────────────────────┼──────────────────────────────┬──────────────────────┬──────────────────────┐
+                │                               │                              │                      │                      │
+    ┌───────────┴─────────┐   ┌────────────┴────────────┐  ┌─────────────┴──────────┐  ┌────────┴────────────┐  ┌──────┴────────────┐
+    │ RiskLevelAlert      │   │ LocationAlert           │  │ SafetyRecommendation  │  │ PriorityAlert      │  │ TimestampAlert
+    │ Decorator           │   │ Decorator               │  │ AlertDecorator        │  │ Decorator          │  │ Decorator
+    │ (ConcreteDecorator) │   │ (ConcreteDecorator)     │  │ (ConcreteDecorator)   │  │ (ConcreteDecorator)│  │ (ConcreteDecorator)
+    ├─────────────────────┤   ├───────────────────────┤  ├──────────────────────┤  ├────────────────────┤  ├──────────────────┤
+    │ - riskLevel: string │   │ - locations: string[] │  │ - recommendation:    │  │ - priority: string │  │ - timestamp: Date│
+    ├─────────────────────┤   ├───────────────────────┤  │       string         │  ├────────────────────┤  ├──────────────────┤
+    │ + getTitle()        │   │ + getBody()           │  ├──────────────────────┤  │ + getBody()        │  │ + getBody()      │
+    │ + getMetadata()     │   │ + getMetadata()       │  │ + getBody()          │  │ + getMetadata()    │  │ + getMetadata()  │
+    └─────────────────────┘   └───────────────────────┘  │ + getMetadata()      │  └────────────────────┘  └──────────────────┘
                                                           └──────────────────────┘
 
-    ┌──────────────────────────────┐
-    │ PlainLanguageAlertDecorator   │
-    │ (ConcreteDecorator)           │
-    ├──────────────────────────────┤
-    │                              │
-    ├──────────────────────────────┤
-    │ + getBody()                  │
-    │ + getMetadata()              │
-    └──────────────────────────────┘
+    ┌──────────────────────────────────────┐
+    │ PlainLanguageAlertDecorator          │
+    │ (ConcreteDecorator)                  │
+    ├──────────────────────────────────────┤
+    │                                      │
+    ├──────────────────────────────────────┤
+    │ + getBody()                          │
+    │ + getMetadata()                      │
+    └──────────────────────────────────────┘
+```
+
+### Rol del Cliente (DashboardComponent)
+
+**El `DashboardComponent` es el Cliente que:**
+
+1. **Solicita alertas decoradas**: Llama a métodos del `AlertMessageBuilderService` para obtener mensajes enriquecidos
+   ```typescript
+   const decoratedMessage = this.alertMessageBuilder.buildCriticalRainAlert();
+   ```
+
+2. **Obtiene el resultado**: Recibe un `AlertMessage` completamente decorado (con múltiples capas)
+
+3. **Lo utiliza para crear la Notificación**: Extrae title y body del mensaje decorado
+   ```typescript
+   const notification: Notification = {
+     title: decoratedMessage.getTitle(),
+     message: decoratedMessage.getBody(),
+     recipient: this.getUserId(),
+     channels: activeChannels
+   };
+   ```
+
+4. **Lo pinta en el Dashboard**: Envía la notificación a través del `NotificationService`
+   ```typescript
+   const responses = this.notificationService.sendNotification(notification);
+   ```
+
+5. **Lo muestra al usuario**: La notificación se visualiza en tiempo real en el dashboard
+
+### Flujo Completo desde el Cliente
+
+```
+┌────────────────────────────────────────────────────────────┐
+│ 1. Usuario hace clic en botón "Enviar Lluvia Intensa"     │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 2. DashboardComponent.sendCriticalRainAlert()             │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 3. AlertMessageBuilder.buildCriticalRainAlert()           │
+│    ├─> new BaseAlertMessage(...)                          │
+│    ├─> new RiskLevelAlertDecorator(msg, 'NARANJA')       │
+│    ├─> new LocationAlertDecorator(msg, [ubicaciones])    │
+│    ├─> new SafetyRecommendationAlertDecorator(msg, ...)  │
+│    ├─> new PriorityAlertDecorator(msg, 'Alta')           │
+│    ├─> new TimestampAlertDecorator(msg, new Date())      │
+│    └─> new PlainLanguageAlertDecorator(msg)              │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 4. DashboardComponent recibe AlertMessage decorado        │
+│    Retorna mensaje con todas las capas aplicadas          │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 5. DashboardComponent extrae title y body                  │
+│    - getTitle() → "[ALERTA NARANJA] Lluvias intensas"    │
+│    - getBody() → Texto enriquecido con todos los datos   │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 6. DashboardComponent crea Notification objeto             │
+│    y envía a través de NotificationService               │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 7. NotificationService envía por canales activos:          │
+│    ├─> SMS, Email, Push, WhatsApp (según preferencias)   │
+│    └─> Actualiza alerts$ observable                      │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────────┐
+│ 8. Dashboard recibe notificación y la pinta en tiempo real │
+│    ├─> Aparece en la sección "Alertas Recientes"         │
+│    ├─> Se muestra con el título decorado                 │
+│    └─> Se muestra el cuerpo enriquecido                  │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### Relaciones del Patrón
@@ -522,27 +641,37 @@ El proyecto utiliza Bootstrap 5 para:
 - Todos los decoradores concretos extienden `AlertMessageDecorator`
 - Cada decorador puede sobrescribir los métodos que necesita enriquecer
 
-### Ejemplo de Composición en Tiempo de Ejecución
+**Inyección de Dependencias:**
+- `DashboardComponent` recibe `AlertMessageBuilderService` inyectado en el constructor
+- `AlertMessageBuilderService` es un @Injectable() con `providedIn: 'root'`
+
+### Ejemplo de Uso Real en Dashboard
 
 ```typescript
-// 1. Crear componente base
-let alert: AlertMessage = new BaseAlertMessage(
-  'Lluvias intensas',
-  'Se prevén lluvias intensas durante las próximas horas.'
-);
+// Desde el dashboard component (CLIENT)
+sendCriticalRainAlert(): void {
+  // 1. Obtener canales activos
+  const activeChannels = this.getActiveChannels();
+  if (activeChannels.length === 0) {
+    alert('Por favor, activa al menos un canal de notificación.');
+    return;
+  }
 
-// 2. Aplicar decoradores secuencialmente (cada uno envuelve el anterior)
-alert = new RiskLevelAlertDecorator(alert, 'NARANJA');
-alert = new LocationAlertDecorator(alert, ['Medellín', 'Bello']);
-alert = new SafetyRecommendationAlertDecorator(alert, 'Evite quebradas.');
-alert = new PriorityAlertDecorator(alert, 'Alta');
-alert = new TimestampAlertDecorator(alert, new Date());
-alert = new PlainLanguageAlertDecorator(alert);
+  // 2. Solicitar al builder que construya la alerta decorada
+  const decoratedMessage = this.alertMessageBuilder.buildCriticalRainAlert();
 
-// 3. Resultado final: mensaje enriquecido con múltiples capas
-console.log(alert.getTitle());     // [ALERTA NARANJA] Lluvias intensas
-console.log(alert.getBody());      // Body enriquecido con ubicación, recomendación, prioridad, timestamp, lenguaje claro
-console.log(alert.getMetadata());  // Metadata consolidada de todos los decoradores
+  // 3. Crear la notificación con el mensaje decorado
+  const notification: Notification = {
+    title: decoratedMessage.getTitle(),
+    message: decoratedMessage.getBody(),
+    recipient: this.getUserId(),
+    channels: activeChannels
+  };
+
+  // 4. Enviar a través del NotificationService
+  const responses = this.notificationService.sendNotification(notification);
+  console.log('Respuestas de envío:', responses);
+}
 ```
 
 ### Ventajas de esta Implementación
@@ -553,6 +682,7 @@ console.log(alert.getMetadata());  // Metadata consolidada de todos los decorado
 ✅ **Responsabilidad única**: Cada decorador agrega un aspecto específico (SRP)
 ✅ **Sustituibilidad**: Cualquier decorador es sustituible por otro (LSP)
 ✅ **Independencia**: Los decoradores no conocen entre sí, solo del `wrappee`
+✅ **Cliente desacoplado**: `DashboardComponent` solo conoce la interfaz `AlertMessage`, no los decoradores concretos
 2. Se envía solicitud al backend (`https://localhost:44357/api/auth/login`)
 3. Si es válido, se guarda el estado de login en localStorage
 4. Se redirige al dashboard
