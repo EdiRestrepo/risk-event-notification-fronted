@@ -4,7 +4,8 @@ import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { UserPreferencesService } from '../services/user-preferences.service';
-import { NotificationService, RealTimeAlert } from '../services/notification.service';
+import { NotificationService, RealTimeAlert, Notification } from '../services/notification.service';
+import { AlertMessageBuilderService } from '../services/decorator/alert-message-builder.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -43,6 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private userPreferencesService: UserPreferencesService,
     private notificationService: NotificationService,
+    private alertMessageBuilder: AlertMessageBuilderService,
     private cdr: ChangeDetectorRef
   ) {
     this.realTimeAlerts$ = this.notificationService.alerts$;
@@ -147,6 +149,107 @@ this.userPreferencesService.loadPreferences(userId).pipe(
 
   toggleSidebar() {
     this.isSidebarVisible = !this.isSidebarVisible;
+  }
+
+  /**
+   * Envía una alerta de lluvia intensa enriquecida con el patrón Decorator
+   * Demuestra cómo los decoradores agilizan progresivamente el mensaje
+   */
+  sendCriticalRainAlert(): void {
+    // Obtener los canales activos del usuario
+    const activeChannels = this.getActiveChannels();
+    if (activeChannels.length === 0) {
+      alert('Por favor, activa al menos un canal de notificación.');
+      return;
+    }
+
+    // Construir la alerta enriquecida con decoradores
+    const decoratedMessage = this.alertMessageBuilder.buildCriticalRainAlert();
+
+    // Enviar la notificación a través de los canales activos
+    const notification: Notification = {
+      title: decoratedMessage.getTitle(),
+      message: decoratedMessage.getBody(),
+      recipient: this.getUserId(),
+      channels: activeChannels
+    };
+
+    const responses = this.notificationService.sendNotification(notification);
+    console.log('Respuestas de envío:', responses);
+  }
+
+  /**
+   * Envía una alerta de riesgo de deslizamiento enriquecida con el patrón Decorator
+   */
+  sendLandslideAlert(): void {
+    const activeChannels = this.getActiveChannels();
+    if (activeChannels.length === 0) {
+      alert('Por favor, activa al menos un canal de notificación.');
+      return;
+    }
+
+    const decoratedMessage = this.alertMessageBuilder.buildLandslideAlert();
+
+    const notification: Notification = {
+      title: decoratedMessage.getTitle(),
+      message: decoratedMessage.getBody(),
+      recipient: this.getUserId(),
+      channels: activeChannels
+    };
+
+    const responses = this.notificationService.sendNotification(notification);
+    console.log('Respuestas de envío:', responses);
+  }
+
+  /**
+   * Envía una alerta de inundación enriquecida con el patrón Decorator
+   */
+  sendFloodAlert(): void {
+    const activeChannels = this.getActiveChannels();
+    if (activeChannels.length === 0) {
+      alert('Por favor, activa al menos un canal de notificación.');
+      return;
+    }
+
+    const decoratedMessage = this.alertMessageBuilder.buildFloodAlert();
+
+    const notification: Notification = {
+      title: decoratedMessage.getTitle(),
+      message: decoratedMessage.getBody(),
+      recipient: this.getUserId(),
+      channels: activeChannels
+    };
+
+    const responses = this.notificationService.sendNotification(notification);
+    console.log('Respuestas de envío:', responses);
+  }
+
+  /**
+   * Obtiene la lista de canales activos según las preferencias del usuario
+   */
+  private getActiveChannels(): string[] {
+    const channels: string[] = [];
+    if (this.channelPreferences.sms) channels.push('sms');
+    if (this.channelPreferences.email) channels.push('email');
+    if (this.channelPreferences.push) channels.push('push');
+    if (this.channelPreferences.whatsapp) channels.push('whatsapp');
+    return channels;
+  }
+
+  /**
+   * Obtiene el ID del usuario actual
+   */
+  private getUserId(): string {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      try {
+        const user = JSON.parse(currentUser);
+        return user.userName || user.name || user.id || 'usuario-demo';
+      } catch (e) {
+        return 'usuario-demo';
+      }
+    }
+    return 'usuario-demo';
   }
 
   logout() {

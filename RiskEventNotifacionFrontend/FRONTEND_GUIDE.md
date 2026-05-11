@@ -9,7 +9,8 @@ Plataforma de notificación de riesgos para Medellín y el Valle de Aburrá. Per
 - ✅ **Login sencillo** con usuario y contraseña
 - 📊 **Dashboard interactivo** con mapa de riesgos, alertas y estadísticas
 - 🔔 **Múltiples canales de notificación** (SMS, Email, Push, WhatsApp)
-- 🏭 **Patrón Factory Method** implementado para preferencias de usuario
+- 🏭 **Patrón Factory Method** implementado para creación de canales
+- 🎨 **Patrón Decorator** implementado para enriquecimiento de mensajes de alerta
 - 🎨 **Diseño responsivo** con Bootstrap 5
 - 🌙 **Interfaz moderna** y profesional
 
@@ -33,19 +34,31 @@ src/
 │   ├── auth.service.ts                      # Servicio de autenticación
 │   ├── notification.service.ts              # Servicio de notificaciones (SignalR)
 │   ├── user-preferences.service.ts          # Servicio de preferencias
-│   └── factory-method/                      # Patrón Factory Method (GoF)
-│       ├── notification-channel.interface.ts # Product (interfaz)
-│       ├── notification-channel-creator.ts   # Creator (clase abstracta)
-│       ├── channels/                         # ConcreteProducts
-│       │   ├── sms-channel.ts
-│       │   ├── email-channel.ts
-│       │   ├── push-channel.ts
-│       │   └── whatsapp-channel.ts
-│       └── creators/                         # ConcreteCreators
-│           ├── sms-channel-creator.ts
-│           ├── email-channel-creator.ts
-│           ├── push-channel-creator.ts
-│           └── whatsapp-channel-creator.ts
+│   ├── factory-method/                      # Patrón Factory Method (GoF)
+│   │   ├── notification-channel.interface.ts # Product (interfaz)
+│   │   ├── notification-channel-creator.ts   # Creator (clase abstracta)
+│   │   ├── channels/                         # ConcreteProducts
+│   │   │   ├── sms-channel.ts
+│   │   │   ├── email-channel.ts
+│   │   │   ├── push-channel.ts
+│   │   │   └── whatsapp-channel.ts
+│   │   └── creators/                         # ConcreteCreators
+│   │       ├── sms-channel-creator.ts
+│   │       ├── email-channel-creator.ts
+│   │       ├── push-channel-creator.ts
+│   │       └── whatsapp-channel-creator.ts
+│   └── decorator/                            # Patrón Decorator (GoF) - NUEVO
+│       ├── alert-message.interface.ts        # Component (interfaz)
+│       ├── base-alert-message.ts             # ConcreteComponent
+│       ├── alert-message.decorator.ts        # Decorator (clase abstracta)
+│       ├── risk-level-alert.decorator.ts     # ConcreteDecorator
+│       ├── location-alert.decorator.ts       # ConcreteDecorator
+│       ├── safety-recommendation-alert.decorator.ts # ConcreteDecorator
+│       ├── priority-alert.decorator.ts       # ConcreteDecorator
+│       ├── timestamp-alert.decorator.ts      # ConcreteDecorator
+│       ├── plain-language-alert.decorator.ts # ConcreteDecorator
+│       ├── alert-message-builder.service.ts  # Builder Service
+│       └── alert-message-builder.service.spec.ts # Unit Tests
 └── styles.css                  # Estilos globales
 ```
 
@@ -153,7 +166,241 @@ const smsChannel = smsCreator.createChannel();
 smsChannel.send(message, recipient);
 ```
 
-## 🚀 Instalación y Ejecución
+## 🎨 Patrón Decorator - Enriquecimiento de Mensajes de Alerta
+
+### Descripción
+
+El patrón **Decorator** (GOF Structural Pattern) se implementa para enriquecer progresivamente los mensajes de alerta sin modificar las clases base ni los canales de notificación existentes. Esto permite agregar información adicional (nivel de riesgo, ubicación, recomendaciones, prioridad, timestamp, lenguaje claro) de forma flexible y combinable.
+
+**Elementos del patrón (GoF):**
+- **Component (Interface)**: `AlertMessage` — define el contrato que todo decorador debe cumplir (`getTitle()`, `getBody()`, `getMetadata()`)
+- **ConcreteComponent**: `BaseAlertMessage` — componente base sin decoradores
+- **Decorator (Abstract)**: `AlertMessageDecorator` — clase abstracta que envuelve un `AlertMessage` y delega a él
+- **ConcreteDecorators**: 
+  - `RiskLevelAlertDecorator` — agrega nivel de riesgo al título
+  - `LocationAlertDecorator` — agrega zona afectada al cuerpo
+  - `SafetyRecommendationAlertDecorator` — agrega recomendaciones de seguridad
+  - `PriorityAlertDecorator` — agrega prioridad
+  - `TimestampAlertDecorator` — agrega fecha/hora de emisión
+  - `PlainLanguageAlertDecorator` — mejora la legibilidad
+
+**Estructura de carpetas:**
+```
+src/services/decorator/
+├── alert-message.interface.ts                        # Component (Interface)
+├── base-alert-message.ts                             # ConcreteComponent
+├── alert-message.decorator.ts                        # Decorator (Abstract)
+├── risk-level-alert.decorator.ts                     # ConcreteDecorator
+├── location-alert.decorator.ts                       # ConcreteDecorator
+├── safety-recommendation-alert.decorator.ts          # ConcreteDecorator
+├── priority-alert.decorator.ts                       # ConcreteDecorator
+├── timestamp-alert.decorator.ts                      # ConcreteDecorator
+├── plain-language-alert.decorator.ts                 # ConcreteDecorator
+├── alert-message-builder.service.ts                  # Builder + Fluent Builder
+└── alert-message-builder.service.spec.ts             # Unit Tests
+```
+
+**Cumplimiento SOLID:**
+- **SRP**: Cada decorador agrega solo un tipo de información específica
+- **OCP**: Se pueden crear nuevos decoradores sin modificar los existentes
+- **LSP**: Cualquier decorador es sustituible por otro a través de la interfaz `AlertMessage`
+- **ISP**: La interfaz `AlertMessage` es pequeña y cohesiva
+- **DIP**: El envío depende de la abstracción `AlertMessage`, no de clases concretas
+
+### Ejemplo de uso
+
+```typescript
+// Construir una alerta base
+let message: AlertMessage = new BaseAlertMessage(
+  'Lluvias intensas',
+  'Se prevén lluvias intensas durante las próximas horas.'
+);
+
+// Aplicar decoradores de forma encadenada
+message = new RiskLevelAlertDecorator(message, 'NARANJA');
+message = new LocationAlertDecorator(message, ['Medellín', 'Bello']);
+message = new SafetyRecommendationAlertDecorator(
+  message,
+  'Evite transitar cerca de quebradas.'
+);
+message = new PriorityAlertDecorator(message, 'Alta');
+message = new TimestampAlertDecorator(message, new Date());
+message = new PlainLanguageAlertDecorator(message);
+
+// Resultado final
+console.log(message.getTitle());
+// [ALERTA NARANJA] Lluvias intensas
+
+console.log(message.getBody());
+// Se prevén lluvias intensas durante las próximas horas.
+// Zona afectada: Medellín, Bello.
+// Recomendación: Evite transitar cerca de quebradas.
+// Prioridad: Alta.
+// Emitido: 23 may, 09:25.
+// ⚠️ Por favor, siga las recomendaciones para proteger su seguridad.
+
+// Enviar a través de NotificationService
+const notification: Notification = {
+  title: message.getTitle(),
+  message: message.getBody(),
+  recipient: 'usuario@example.com',
+  channels: ['sms', 'email', 'push']
+};
+
+this.notificationService.sendNotification(notification);
+```
+
+### Builder Service - Construcción fluida
+
+El `AlertMessageBuilderService` proporciona dos formas de construir alertas:
+
+**1. Factory Methods predefinidos:**
+```typescript
+// Construcción rápida de alertas comunes
+const rainAlert = this.alertMessageBuilder.buildCriticalRainAlert();
+const landslideAlert = this.alertMessageBuilder.buildLandslideAlert();
+const floodAlert = this.alertMessageBuilder.buildFloodAlert();
+```
+
+**2. Fluent Builder (construcción flexible):**
+```typescript
+const customAlert = this.alertMessageBuilder
+  .createBuilder()
+  .withTitle('Alerta Personalizada')
+  .withBody('Mensaje personalizado')
+  .withRiskLevel('AMARILLO')
+  .withLocations(['Medellín', 'Envigado'])
+  .withRecommendation('Manténgase atento')
+  .withPriority('Media')
+  .withTimestamp()
+  .withPlainLanguage()
+  .build();
+```
+
+### Diagrama UML (GoF Decorator)
+
+```mermaid
+classDiagram
+  class AlertMessage {
+    <<interface>>
+    +getTitle() string
+    +getBody() string
+    +getMetadata() Record~string,string~
+  }
+
+  class BaseAlertMessage {
+    -title string
+    -body string
+    +getTitle() string
+    +getBody() string
+    +getMetadata() Record~string,string~
+  }
+
+  class AlertMessageDecorator {
+    <<abstract>>
+    #wrappee AlertMessage
+    +getTitle() string
+    +getBody() string
+    +getMetadata() Record~string,string~
+  }
+
+  class RiskLevelAlertDecorator
+  class LocationAlertDecorator
+  class SafetyRecommendationAlertDecorator
+  class PriorityAlertDecorator
+  class TimestampAlertDecorator
+  class PlainLanguageAlertDecorator
+  class AlertMessageBuilderService
+  class NotificationService
+
+  AlertMessage <|.. BaseAlertMessage
+  AlertMessage <|.. AlertMessageDecorator
+  AlertMessageDecorator o-- AlertMessage : envuelve
+  AlertMessageDecorator <|-- RiskLevelAlertDecorator
+  AlertMessageDecorator <|-- LocationAlertDecorator
+  AlertMessageDecorator <|-- SafetyRecommendationAlertDecorator
+  AlertMessageDecorator <|-- PriorityAlertDecorator
+  AlertMessageDecorator <|-- TimestampAlertDecorator
+  AlertMessageDecorator <|-- PlainLanguageAlertDecorator
+  AlertMessageBuilderService --> AlertMessage : construye
+  NotificationService --> AlertMessage : usa contenido final
+```
+
+### Flujo de enriquecimiento progresivo
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Composición de Decoradores - Enriquecimiento Progresivo         │
+├─────────────────────────────────────────────────────────────────┤
+
+1. BaseAlertMessage
+   Title: "Lluvias intensas"
+   Body: "Se prevén lluvias intensas..."
+
+2. + RiskLevelAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas..."
+
+3. + LocationAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas...
+          Zona afectada: Medellín, Bello."
+
+4. + SafetyRecommendationAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas...
+          Zona afectada: Medellín, Bello.
+          Recomendación: Evite transitar cerca de quebradas."
+
+5. + PriorityAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas...
+          Zona afectada: Medellín, Bello.
+          Recomendación: Evite transitar cerca de quebradas.
+          Prioridad: Alta."
+
+6. + TimestampAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas...
+          Zona afectada: Medellín, Bello.
+          Recomendación: Evite transitar cerca de quebradas.
+          Prioridad: Alta.
+          Emitido: 23 may, 09:25."
+
+7. + PlainLanguageAlertDecorator
+   Title: "[ALERTA NARANJA] Lluvias intensas"
+   Body: "Se prevén lluvias intensas...
+          Zona afectada: Medellín, Bello.
+          Recomendación: Evite transitar cerca de quebradas.
+          Prioridad: Alta.
+          Emitido: 23 may, 09:25.
+          ⚠️ Por favor, siga las recomendaciones..."
+
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Justificación del patrón
+
+El patrón **Decorator** es adecuado porque:
+1. **Flexibilidad**: Los mensajes pueden variar según nivel de riesgo, ubicación, hora, prioridad y recomendaciones sin crear múltiples subclases
+2. **Combinabilidad**: Se pueden aplicar decoradores en cualquier orden y combinación
+3. **Extensibilidad**: Nuevos decoradores pueden agregarse sin modificar los existentes (OCP)
+4. **Mantenibilidad**: Cada decorador tiene una responsabilidad única (SRP)
+5. **Integración limpia**: Complementa perfectamente al Factory Method para crear canales sin interferir con su lógica
+
+### Comparación: Factory Method + Decorator
+
+| Aspecto | Factory Method | Decorator |
+|--------|---|---|
+| **Propósito** | Crear objetos de diferentes tipos | Agregar responsabilidades dinámicamente |
+| **Aplica a** | Canales de notificación | Contenido del mensaje |
+| **Problemática** | Múltiples formas de crear canales | Múltiples combinaciones de información en alertas |
+| **Solución** | Subclasificación (Product/Creator) | Composición (Decorator Chain) |
+| **Momento** | En tiempo de creación | En tiempo de compilación y ejecución |
+
+Juntos crean un sistema de alertas **flexible, mantenible y escalable**.
+
+
 
 ### Requisitos
 - Node.js 18+
