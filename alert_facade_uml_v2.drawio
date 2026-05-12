@@ -1,0 +1,98 @@
+<mxfile host="65bd71144e">
+    <diagram name="UML Alert Center Facade" id="0">
+        <mxGraphModel dx="2683" dy="988" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="patternLabel" value="Patrones aplicados: Facade + Factory Method + Decorator" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=16;fontStyle=1;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="-10" y="30" width="520" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dashboard" value="&lt;b&gt;DashboardComponent&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CLIENT)&lt;/i&gt;&lt;hr&gt;- facade: AlertCenterFacadeService&lt;hr&gt;+ ngOnInit(): void&lt;br&gt;+ sendCriticalRainAlert(): void&lt;br&gt;+ sendLandslideAlert(): void&lt;br&gt;+ sendFloodAlert(): void&lt;br&gt;+ toggleChannel(channel): void&lt;br&gt;+ logout(): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="530" y="40" width="620" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="facade" value="&lt;b&gt;AlertCenterFacadeService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(FACADE)&lt;/i&gt;&lt;hr&gt;- notificationService: NotificationService&lt;br&gt;- userPreferencesService: UserPreferencesService&lt;br&gt;- alertMessageBuilder: AlertMessageBuilderService&lt;br&gt;- router: Router&lt;hr&gt;+ get alerts$(): Observable&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;+ initializeAlertCenter(userId): void&lt;br&gt;+ sendCriticalRainAlert(): void&lt;br&gt;+ sendLandslideAlert(): void&lt;br&gt;+ sendFloodAlert(): void&lt;br&gt;+ getActiveChannels(): string[]&lt;br&gt;+ toggleChannel(channel): void&lt;br&gt;+ savePreferences(): Observable&amp;lt;SavePreferencesResponse&amp;gt;&lt;br&gt;+ removeAlert(alertId): void&lt;br&gt;+ logout(): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#fff2cc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="340" width="900" height="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="notificationService" value="&lt;b&gt;NotificationService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(Factory Method)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ sendNotification()&lt;br&gt;+ startConnection()&lt;br&gt;+ stopConnection()" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#d5e8d4;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="830" width="270" height="165" as="geometry"/>
+                </mxCell>
+                <mxCell id="builderService" value="&lt;b&gt;AlertMessageBuilderService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(Decorator)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ buildCriticalRain()&lt;br&gt;+ buildLandslide()&lt;br&gt;+ buildFlood()&lt;br&gt;+ createBuilder()" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="830" width="320" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="preferencesService" value="&lt;b&gt;UserPreferencesService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(ENHANCED con helpers)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ getActiveChannelNames()&lt;br&gt;+ toggleChannel()&lt;br&gt;+ savePreferences()&lt;br&gt;+ isChannelEnabled()" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="830" width="350" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="router" value="&lt;b&gt;Router&lt;/b&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ navigate" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f5f5f5;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1290" y="840" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="channels" value="&lt;b&gt;Channels&lt;/b&gt;&lt;br&gt;(SMS, Email, Push, WhatsApp)&lt;hr&gt;&amp;nbsp;&lt;hr&gt;via NotificationChannelCreator" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#d5e8d4;fontSize=13;align=center;verticalAlign=middle;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1085" width="340" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="decorators" value="&lt;b&gt;Decorators&lt;/b&gt;&lt;br&gt;(RiskLevel, Location, etc)&lt;hr&gt;&amp;nbsp;&lt;hr&gt;&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=center;verticalAlign=middle;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="1085" width="320" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="facadeNote" value="Facade: centraliza las operaciones del Dashboard y oculta la complejidad de servicios internos." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#fff2cc;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="1320" y="390" width="310" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="factoryNote" value="Factory Method: mantiene la creación/envío por canales como SMS, Email, Push y WhatsApp." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#d5e8d4;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="705" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="decoratorNote" value="Decorator Pattern: permite enriquecer los mensajes de alerta con riesgo, ubicación, prioridad, recomendaciones, fecha, etc." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#e1d5e7;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="705" width="340" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeDashboardFacade" value="usa&#xa;1 dependencia" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="dashboard" target="facade" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edgeFacadeNotification" value="delega a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="notificationService" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="360" y="505"/>
+                            <mxPoint x="360" y="913"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edgeFacadeBuilder" value="delega a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="builderService" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="840" y="750"/>
+                            <mxPoint x="790" y="750"/>
+                            <mxPoint x="790" y="915"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edgeFacadePreferences" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="preferencesService" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="840" y="750"/>
+                            <mxPoint x="1005" y="750"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edgeFacadeRouter" value="delega a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="router" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="840" y="750"/>
+                            <mxPoint x="1385" y="750"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edgeNotificationChannels" value="Factory Method&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="notificationService" target="channels" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="210" y="1010"/>
+                            <mxPoint x="210" y="1010"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edgeBuilderDecorators" value="Decorator Pattern&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="builderService" target="decorators" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="1060"/>
+                            <mxPoint x="580" y="1060"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
