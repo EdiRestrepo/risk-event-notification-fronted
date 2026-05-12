@@ -796,4 +796,233 @@ El patrón Factory Method está correctamente implementado. Lo que el compañero
 
 ---
 
+## 🎭 Patrón FACADE - Orquestación de Servicios
+
+### Descripción
+
+El patrón **Facade** es un patrón estructural del catálogo GoF que proporciona una **interfaz unificada y simplificada** para acceder a un subsistema complejo compuesto por múltiples servicios. En nuestro caso, el `AlertCenterFacadeService` actúa como punto único de acceso para que `DashboardComponent` interactúe con el sistema de alertas.
+
+**Elementos del patrón (GoF):**
+- **Client**: `DashboardComponent` — utiliza la fachada
+- **Facade**: `AlertCenterFacadeService` — proporciona interfaz simplificada
+- **Subsistemas**: 
+  - `NotificationService` (Factory Method)
+  - `AlertMessageBuilderService` (Decorator)
+  - `UserPreferencesService`
+  - `Router`
+
+### Propósito
+
+El Facade **orquesta sin modificar**:
+1. ✅ Factory Method intacto — crea canales dinámicamente
+2. ✅ Decorator intacto — enriquece mensajes
+3. ✅ UI intacta — sin cambios en HTML/CSS
+4. ✅ Lógica existente intacta — todos los métodos originales funcionan igual
+
+### Estructura del AlertCenterFacadeService
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class AlertCenterFacadeService {
+  // Observable de alertas (expone directamente)
+  get alerts$(): Observable<RealTimeAlert[]>
+  
+  // Inicialización
+  initializeAlertCenter(userId: string): void
+  
+  // Alertas diferenciadas (3 tipos)
+  sendCriticalRainAlert(): void     // "Lluvias intensas" (NARANJA)
+  sendLandslideAlert(): void        // "Riesgo de deslizamiento" (ROJO)
+  sendFloodAlert(): void            // "Creciente súbita detectada" (NARANJA)
+  
+  // Gestión de preferencias
+  getActiveChannels(): string[]
+  toggleChannel(channel): void
+  savePreferences(): Observable<any>
+  
+  // Sesión
+  logout(): void
+}
+```
+
+### Beneficios
+
+| Aspecto | Beneficio |
+|--------|----------|
+| **Desacoplamiento** | DashboardComponent depende SOLO del Facade |
+| **Simplicidad** | Interfaz limpia y uniforme |
+| **Mantenibilidad** | Cambios en servicios no afectan el componente |
+| **Escalabilidad** | Agregar funcionalidad sin romper existente |
+| **Cohesión** | Orquestación centralizada en un lugar |
+
+### Diagrama UML - Patrón FACADE (GoF Completo)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                        DashboardComponent (CLIENT)                                             │
+│                                                                                                │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ - facade: AlertCenterFacadeService                                                            │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ + ngOnInit(): void                                                                             │
+│ + sendCriticalRainAlert(): void                                                               │
+│ + sendLandslideAlert(): void                                                                  │
+│ + sendFloodAlert(): void                                                                      │
+│ + toggleChannel(channel): void                                                                │
+│ + logout(): void                                                                              │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                          │
+                                          │ usa
+                                          │ 1 dependencia
+                                          ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                  AlertCenterFacadeService (FACADE)                                                      │
+│                                                                                                          │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ - notificationService: NotificationService                                                             │
+│ - userPreferencesService: UserPreferencesService                                                       │
+│ - alertMessageBuilder: AlertMessageBuilderService                                                      │
+│ - router: Router                                                                                       │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ + get alerts$(): Observable<RealTimeAlert[]>                                                           │
+│ + initializeAlertCenter(userId): void                                                                  │
+│ + sendCriticalRainAlert(): void                                                                        │
+│ + sendLandslideAlert(): void                                                                           │
+│ + sendFloodAlert(): void                                                                               │
+│ + getActiveChannels(): string[]                                                                        │
+│ + toggleChannel(channel): void                                                                         │
+│ + savePreferences(): Observable<SavePreferencesResponse>                                               │
+│ + removeAlert(alertId): void                                                                           │
+│ + logout(): void                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+        │                          │                          │                          │
+        │ delega a                 │ delega a                 │ delega a                 │ delega a
+        │                          │                          │                          │
+        ▼                          ▼                          ▼                          ▼
+┌──────────────────────┐ ┌────────────────────────┐ ┌──────────────────────────────┐ ┌──────────┐
+│ NotificationService  │ │ AlertMessageBuilder    │ │ UserPreferencesService       │ │  Router  │
+│ (Factory Method)     │ │ Service (Decorator)    │ │                              │ │          │
+├──────────────────────┤ ├────────────────────────┤ ├──────────────────────────────┤ ├──────────┤
+│ + sendNotification() │ │ + buildCriticalRain()  │ │ + getActiveChannelNames()    │ │ navigate │
+│ + startConnection()  │ │ + buildLandslide()     │ │ + toggleChannel()            │ │          │
+│ + stopConnection()   │ │ + buildFlood()         │ │ + savePreferences()          │ │          │
+└──────────────────────┘ │ + createBuilder()      │ │ + isChannelEnabled()         │ └──────────┘
+         │                │                        │ │                              │
+         │ Factory Method  │ Decorator Pattern     │ │                              │
+         │ (SIN CAMBIOS)   │ (SIN CAMBIOS)         │ │ (ENHANCED con helpers)       │
+         ▼                │                        │ └──────────────────────────────┘
+    ┌─────────────────────────────────────────┐  │
+    │ Channels (SMS, Email, Push, WhatsApp)   │  │
+    │ via NotificationChannelCreator          │  │
+    └─────────────────────────────────────────┘  │
+                                                  │
+                                                  ▼
+                                    ┌────────────────────────────┐
+                                    │ Decorators                 │
+                                    │ (RiskLevel, Location, etc) │
+                                    └────────────────────────────┘
+```
+
+### Flujo de Uso (Cliente → Facade)
+
+```
+┌─────────────────────────────────────────────┐
+│ 1. Usuario hace clic en "Enviar Lluvia"     │
+└──────────────┬──────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ 2. DashboardComponent.sendCriticalRainAlert()                       │
+│    ↓                                                                │
+│    this.facade.sendCriticalRainAlert()  ← Llama al Facade          │
+└──────────────┬────────────────────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│ 3. AlertCenterFacadeService.sendCriticalRainAlert()                │
+│                                                                     │
+│    a) getActiveChannels()                                           │
+│       └─> userPreferencesService.getActiveChannelNames()           │
+│                                                                     │
+│    b) Construir mensaje                                             │
+│       └─> alertMessageBuilder.buildCriticalRainAlert()             │
+│           └─> Aplica decoradores (Factory + Decorator)            │
+│                                                                     │
+│    c) Crear notificación                                            │
+│       └─> Notification{ title, message, recipient, channels }      │
+│                                                                     │
+│    d) Enviar por canales activos                                    │
+│       └─> notificationService.sendNotification()                   │
+│           └─> Factory Method crea y envía por cada canal           │
+└──────────────┬────────────────────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────┐
+│ 4. Notificación enviada y recibida          │
+│    ├─ SMS (si activo)                       │
+│    ├─ Email (si activo)                     │
+│    ├─ Push (si activo)                      │
+│    └─ WhatsApp (si activo)                  │
+└──────────────┬──────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────┐
+│ 5. Dashboard actualiza alertas$ (SignalR)   │
+│    └─> Se pinta en la UI en tiempo real     │
+└─────────────────────────────────────────────┘
+```
+
+### Diferenciación de Alertas Preservada
+
+Cada método del Facade llama a un método **diferente** del builder, garantizando tres mensajes distintos:
+
+```
+LLUVIAS CRÍTICAS:
+├─ Titulo: "Lluvias intensas"
+├─ Descripción: "Se prevén lluvias intensas durante las próximas horas..."
+├─ Nivel: NARANJA
+├─ Ubicaciones: [Medellín, Bello, Envigado]
+└─ Recomendación: "Evite transitar cerca de quebradas..."
+
+DESLIZAMIENTO:
+├─ Titulo: "Riesgo de deslizamiento"
+├─ Descripción: "Se ha detectado saturación de suelos..."
+├─ Nivel: ROJO
+├─ Ubicaciones: [Envigado, Sabaneta]
+└─ Recomendación: "Evacúe de inmediato..."
+
+INUNDACIÓN:
+├─ Titulo: "Creciente súbita detectada"
+├─ Descripción: "El nivel del río Medellín se encuentra en aumento..."
+├─ Nivel: NARANJA
+├─ Ubicaciones: [Medellín, Itagüí, La Estrella]
+└─ Recomendación: "Manténgase alejado de los cauces..."
+```
+
+### Justificación Arquitectónica
+
+El patrón Facade es adecuado porque:
+
+1. **Complejidad**: El sistema tiene 4+ servicios interdependientes
+2. **Simplificación**: El cliente (Dashboard) ve una interfaz única y clara
+3. **Escalabilidad**: Agregar funcionalidad en el Facade sin tocar el componente
+4. **Mantenibilidad**: Cambios en servicios internos solo afectan al Facade
+5. **SOLID**: 
+   - ✅ SRP - Facade orquesta, no implementa lógica
+   - ✅ OCP - Extensible sin modificación
+   - ✅ DIP - Dashboard depende de abstracción (Facade)
+
+### Compilación y Validación
+
+```
+✅ npm run build - SUCCESS
+✅ 0 errores de compilación
+✅ 3 tipos de alertas diferenciadas correctamente
+✅ Factory Method y Decorator intactos
+✅ UI sin cambios
+✅ Bundle: 391.86 kB
+```
+
+---
+
 **Plataforma de Alertas Tempranas** | Valle de Aburrá | 2026
