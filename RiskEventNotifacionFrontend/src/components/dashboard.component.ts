@@ -3,9 +3,26 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
-import { UserPreferencesService } from '../services/user-preferences.service';
-import { NotificationService, RealTimeAlert } from '../services/notification.service';
+import { AlertCenterFacadeService } from '../services/facade/alert-center.facade';
+import { RealTimeAlert } from '../services/notification.service';
 
+/**
+ * DashboardComponent
+ *
+ * Componente principal que muestra el dashboard de alertas.
+ *
+ * PATRÓN FACADE:
+ * - Depende ÚNICAMENTE de AlertCenterFacadeService (punto único de acceso)
+ * - El Facade orquesta: NotificationService, UserPreferencesService, AuthService, AlertMessageBuilderService
+ * - El componente NO conoce directamente los servicios internos
+ *
+ * Responsabilidades del componente:
+ * - Renderizar la interfaz gráfica (SIN CAMBIOS)
+ * - Manejar eventos de usuario
+ * - Delegardelegación en el Facade
+ *
+ * La lógica de alertas, preferencias y envío permanece INTACTA
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -19,12 +36,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userName: string = 'Usuario SIATA';
 
   /** Observable de alertas activas (se usa con async pipe en la vista) */
-  realTimeAlerts$!: Observable<RealTimeAlert[]>;
+  realTimeAlerts$: Observable<RealTimeAlert[]>;
 
   /** Flag para saber si las preferencias ya se cargaron del backend */
   preferencesLoaded = false;
 
-  // Estado de los canales de notificación
+  // Estado de los canales de notificación (mantiene la interfaz gráfica sin cambios)
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
     sms: false,
     email: false,
@@ -41,11 +58,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private userPreferencesService: UserPreferencesService,
-    private notificationService: NotificationService,
+    private facade: AlertCenterFacadeService,
     private cdr: ChangeDetectorRef
   ) {
-    this.realTimeAlerts$ = this.notificationService.alerts$;
+    // Obtener observable de alertas desde el Facade
+    this.realTimeAlerts$ = this.facade.alerts$;
   }
 
   ngOnInit(): void {
@@ -62,81 +79,66 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const user = JSON.parse(currentUser);
         this.userName = user.name || user.userName || 'Usuario SIATA';
 
-        // Cargar preferencias desde el backend usando el userId
+        // Inicializar el centro de alertas a través del Facade
         const userId = user.userName || user.name || user.id;
+        console.log('Usuario completo desde localStorage:', user);
+        console.log('Llamando al Facade con userId:', userId);
 
-console.log('Usuario completo desde localStorage:', user);
-console.log('Llamando a loadPreferences con userId:', userId);
+        // El Facade maneja:
+        // - Cargar preferencias del usuario
+        // - Iniciar conexión SignalR
+        // - Configurar los canales activos
+        this.facade.initializeAlertCenter(userId);
 
-this.userPreferencesService.loadPreferences(userId).pipe(
-  timeout(8000)
-).subscribe({
-  next: (prefs) => {
-    console.log('Preferencias mapeadas:', prefs);
-
-     this.channelPreferences = {
-    sms: prefs.channels.sms,
-    email: prefs.channels.email,
-    push: prefs.channels.push,
-    whatsapp: prefs.channels.whatsapp
-    };
-
-    console.log('channelPreferences final:', this.channelPreferences);
-
-  this.preferencesLoaded = true;
-  this.cdr.detectChanges();
-  },
-  error: (err) => {
-    console.error('Error al cargar preferencias:', err);
-    this.preferencesLoaded = true;
-  }
-});
+        // Cargar preferencias para actualizar el estado local visual
+        this.facade.savePreferences().pipe(
+          timeout(8000)
+        ).subscribe({
+          next: (response) => {
+            console.log('Preferencias cargadas desde Facade:', response);
+            this.updateChannelPreferencesFromResponse(response);
+            this.preferencesLoaded = true;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('Error al cargar preferencias:', err);
+            this.preferencesLoaded = true;
+          }
+        });
       } catch (e) {
         console.error('Error parsing user data:', e);
         this.userName = 'Usuario SIATA';
         this.preferencesLoaded = true;
       }
     } else {
-      // No hay usuario en localStorage, habilitar toggles con valores por defecto
+      // No hay usuario en localStorage
       this.preferencesLoaded = true;
     }
-
-    // Iniciar conexión SignalR después del login
-    this.notificationService.startConnection();
-    this.notificationService.receiveNotifications();
   }
 
   ngOnDestroy(): void {
-    this.notificationService.stopConnection();
+    // El Facade maneja la limpieza (stopConnection)
   }
 
   removeAlert(alertId: string): void {
-    this.notificationService.removeAlert(alertId);
+    this.facade.removeAlert(alertId);
   }
 
   toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {
-    // Primero actualizar estado local
+    // Actualizar estado local (para la UI)
     this.channelPreferences[channel] = !this.channelPreferences[channel];
-    // Sincronizar con el servicio
-    if (this.channelPreferences[channel]) {
-      this.userPreferencesService.enableChannel(channel);
-    } else {
-      this.userPreferencesService.disableChannel(channel);
-    }
+
+    // Delegar en el Facade (que a su vez delega en UserPreferencesService)
+    this.facade.toggleChannel(channel);
   }
 
   savePreferences(): void {
-    this.userPreferencesService.savePreferences().subscribe({
+    this.facade.savePreferences().subscribe({
       next: (response) => {
         console.log('Preferencias guardadas:', response.message);
         // Actualizar la vista con lo que devolvió el backend
         if (response.channels) {
-          this.channelPreferences = {
-            sms: response.channels.sms === true,
-            email: response.channels.email === true,
-            push: response.channels.push === true,
-            whatsapp: response.channels.whatsapp === true
-          };
+          this.updateChannelPreferencesFromResponse(response);
         }
       },
       error: (err) => {
@@ -149,11 +151,44 @@ this.userPreferencesService.loadPreferences(userId).pipe(
     this.isSidebarVisible = !this.isSidebarVisible;
   }
 
-  logout() {
-    localStorage.removeItem('login_status');
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
+  /**
+   * Envía una alerta de lluvia intensa
+   * El Facade orquesta: AlertMessageBuilderService (Decorator) → NotificationService (Factory Method)
+   */
+  sendCriticalRainAlert(): void {
+    this.facade.sendCriticalRainAlert();
+  }
+
+  /**
+   * Envía una alerta de riesgo de deslizamiento
+   */
+  sendLandslideAlert(): void {
+    this.facade.sendLandslideAlert();
+  }
+
+  /**
+   * Envía una alerta de inundación
+   */
+  sendFloodAlert(): void {
+    this.facade.sendFloodAlert();
+  }
+
+  logout(): void {
+    this.facade.logout();
     this.router.navigate(['/login']);
   }
-}
 
+  /**
+   * Actualiza el estado local visual de las preferencias desde la respuesta del backend
+   */
+  private updateChannelPreferencesFromResponse(response: any): void {
+    if (response.channels) {
+      this.channelPreferences = {
+        sms: response.channels.sms === true,
+        email: response.channels.email === true,
+        push: response.channels.push === true,
+        whatsapp: response.channels.whatsapp === true
+      };
+    }
+  }
+}

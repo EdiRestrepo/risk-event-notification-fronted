@@ -145,6 +145,23 @@
               </h5>
             </div>
             <div class="card-body">
+              <!-- Botones para enviar alertas de prueba (Patrón Decorator) -->
+              <div class="alert alert-info mb-4" style="background-color: #e7f3ff; border-color: #0066cc;">
+                <h6 class="mb-2"><i class="bi bi-info-circle"></i> Demo: Patrón Decorator</h6>
+                <p class="text-muted small mb-3">Haz clic en los botones para enviar alertas enriquecidas progresivamente:</p>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-sm btn-warning" (click)="sendCriticalRainAlert()" title="Enviar alerta de lluvia intensa">
+                    <i class="bi bi-cloud-rain"></i> Lluvia Intensa
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="sendLandslideAlert()" title="Enviar alerta de deslizamiento">
+                    <i class="bi bi-exclamation-octagon"></i> Deslizamiento
+                  </button>
+                  <button class="btn btn-sm btn-primary" (click)="sendFloodAlert()" title="Enviar alerta de inundación">
+                    <i class="bi bi-water"></i> Inundación
+                  </button>
+                </div>
+              </div>
+
               <ng-container *ngIf="realTimeAlerts$ | async as alerts">
                 <div class="timeline" *ngIf="alerts.length > 0; else noAlerts">
                   <div *ngFor="let alert of alerts" class="timeline-item mb-3 pb-3 border-bottom">

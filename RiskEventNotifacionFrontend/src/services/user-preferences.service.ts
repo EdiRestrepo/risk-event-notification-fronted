@@ -222,10 +222,30 @@ export class UserPreferencesService {
   }
 
   /**
-   * Obtiene los canales activos del usuario
+   * Obtiene los canales activos del usuario (objetos NotificationChannel)
    */
   getActiveChannels(): NotificationChannel[] {
     return this.userPreferences.activeChannels;
+  }
+
+  /**
+   * Obtiene los nombres de los canales activos como strings
+   * Útil para el Facade y el Dashboard
+   */
+  getActiveChannelNames(): string[] {
+    const activeNames: string[] = [];
+    if (this.userPreferences.channels.sms) activeNames.push('sms');
+    if (this.userPreferences.channels.email) activeNames.push('email');
+    if (this.userPreferences.channels.push) activeNames.push('push');
+    if (this.userPreferences.channels.whatsapp) activeNames.push('whatsapp');
+    return activeNames;
+  }
+
+  /**
+   * Verifica si un canal está habilitado
+   */
+  isChannelEnabled(channelName: 'sms' | 'email' | 'push' | 'whatsapp'): boolean {
+    return this.userPreferences.channels[channelName] || false;
   }
 
   /**
