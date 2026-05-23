@@ -39,7 +39,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   realTimeAlerts$: Observable<RealTimeAlert[]>;
 
   /** Flag para saber si las preferencias ya se cargaron del backend */
-  preferencesLoaded = false;
+  preferencesLoaded = true; // Inicializar como true para permitir interacción inmediata
 
   // Estado de los canales de notificación (mantiene la interfaz gráfica sin cambios)
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
@@ -91,28 +91,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.facade.initializeAlertCenter(userId);
 
         // Cargar preferencias para actualizar el estado local visual
+        // Permitir que la UI sea interactiva mientras se cargan las preferencias
         this.facade.savePreferences().pipe(
           timeout(8000)
         ).subscribe({
           next: (response) => {
             console.log('Preferencias cargadas desde Facade:', response);
             this.updateChannelPreferencesFromResponse(response);
-            this.preferencesLoaded = true;
             this.cdr.detectChanges();
           },
           error: (err) => {
             console.error('Error al cargar preferencias:', err);
-            this.preferencesLoaded = true;
+            // Las preferencias siguen siendo accesibles incluso si hay error
           }
         });
       } catch (e) {
         console.error('Error parsing user data:', e);
         this.userName = 'Usuario SIATA';
-        this.preferencesLoaded = true;
       }
-    } else {
-      // No hay usuario en localStorage
-      this.preferencesLoaded = true;
     }
   }
 
