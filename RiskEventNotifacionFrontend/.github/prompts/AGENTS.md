@@ -111,7 +111,6 @@ Valida que las entregas cumplan:
 - [ ] Patrones de Comportamiento (Fase 3: Implementación)
 
 ### Por Hacer ⏳
-- [ ] Pruebas unitarias de patrones
 - [ ] Documentación de API
 - [ ] Guía de extensión para nuevos patrones
 

@@ -88,7 +88,7 @@ context: "Risk Event Notification Frontend - Angular"
 - [ ] Patrones claramente implementados y funcionales
 - [ ] Principios SOLID aplicados (Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion)
 - [ ] Integración natural con la arquitectura Angular existente
-- [ ] Pruebas unitarias si es apropiado
+
 
 **Estructura de Carpetas Sugerida:**
 ```
