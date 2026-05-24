@@ -3,26 +3,26 @@ import { ALERT_CRITICAL_AUTO_CLOSE_MILLISECONDS } from '../../models/risk-alert.
 import { AlertPresentationStrategy, AlertPresentationViewModel } from './alert-presentation-strategy.interface';
 import { baseViewModelFields, messageContains } from './alert-keywords.util';
 
-/** Estrategia para alertas de deslizamiento y saturacion de suelos. */
-export class LandslideRiskAlertStrategy implements AlertPresentationStrategy {
+/** Estrategia para huracanes, ciclones y vientos destructivos. */
+export class HurricaneRiskAlertStrategy implements AlertPresentationStrategy {
   canHandle(alert: RealTimeAlert): boolean {
-    if (alert.content.eventType === 3) return true;
-    if ([1, 2, 4, 5, 6].includes(alert.content.eventType)) return false;
+    if (alert.content.eventType === 6) return true;
+    if ([1, 2, 3, 4, 5].includes(alert.content.eventType)) return false;
 
-    return messageContains(alert, ['deslizamiento', 'ladera', 'saturacion', 'suelos', 'talud']);
+    return messageContains(alert, ['huracan', 'ciclon', 'tormenta tropical', 'vientos destructivos', 'vientos fuertes']);
   }
 
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
       ...baseViewModelFields(alert),
-      title: alert.content.title || 'Riesgo de deslizamiento',
-      iconClass: 'bi bi-exclamation-octagon-fill text-white',
-      visualClass: 'risk-landslide',
+      title: alert.content.title || 'Alerta critica por huracan',
+      iconClass: 'bi bi-tornado text-white',
+      visualClass: 'risk-hurricane',
       riskLabel: 'ROJO - CRITICO',
       priority: 'CRITICA',
       requiresImmediateAction: true,
       autoCloseMilliseconds: ALERT_CRITICAL_AUTO_CLOSE_MILLISECONDS,
-      recommendation: 'Alejese de taludes y viviendas en ladera. Atienda instrucciones de organismos de emergencia.'
+      recommendation: 'Permanezca bajo techo, alejese de ventanas y siga instrucciones oficiales de evacuacion.'
     };
   }
 }

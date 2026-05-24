@@ -1,38 +1,12 @@
-# Integración de Patrones: Strategy, Observer, Decorator y Factory Method
-
-## Objetivo
-Coordinar los 4 patrones de diseño para que las alertas simuladas se procesen y muestren correctamente en el dashboard con diferenciación visual.
-
-## Tareas
-
-### 1. Agregar 2 Nuevas Estrategias de Alerta
+Quiero que el patrón Decorator en el frontend de RiskEventNotification se sincronice con las alertas del patrón Strategy para que las alertas del Decorator se muestren junto con las alertas del Strategy, y que ambas tengan colores y tiempos de duración consistentes. Además, quiero agregar dos nuevas estrategias de alerta para terremotos y huracanes, y asegurarme de que los canales de notificación coincidan con los que llegan desde el backend:
+1. Agregar 2 Nuevas Estrategias de Alerta
 Crear estrategias para:
 - **Terremoto** → EarthquakeRiskAlertStrategy (ROJO, CRITICA, 40s)
 - **Huracán** → HurricaneRiskAlertStrategy (ROJO, CRITICA, 40s)
 
 Agregar a `simulatedBackendAlerts` en NotificationService.
-
-### 2. Integración Strategy + Observer + Decorator
-Flujo sincronizado:
-```
-Alerta simulada → Strategy (selecciona estrategia) 
-              → Observer (notifica suscriptores)
-              → Decorator/AlertMessageBuilder (enriquece mensaje)
-              → Dashboard (renderiza diferenciado)
-```
-
-Verificar en console.log que los 3 patrones se ejecutan en orden.
-
-### 3. Integración Factory Method
-Coordinar con los 3 patrones anteriores:
-- Factory crea canales según alerta
-- Strategy determina prioridad
-- Observer notifica
-- Decorator enriquece
-
-No modificar Factory, solo asegurar coordinación.
-
-### 4. Sincronizar Colores
+2. Que el patron decorator tenga las mismas alertas que el strategy
+3. Sincronizar Colores de las alertas del decorator y strategy 
 Colores consistentes en todo el flujo:
 | Tipo | Strategy | Decorator | Dashboard |
 |------|----------|-----------|-----------|
@@ -42,10 +16,6 @@ Colores consistentes en todo el flujo:
 | Terremoto | ROJO | rojo | rojo |
 | Huracán | ROJO | rojo | rojo |
 | Genérica | GRIS | gris | gris |
-
-## Validación
-- ✅ 6 tipos de alertas funcionando (incluir 2 nuevas)
-- ✅ Console muestra: Strategy → Observer → Decorator en orden
-- ✅ Dashboard muestra alertas con colores correctos
-- ✅ Tiempos auto-close correctos según Strategy
-- ✅ Factory Method crea canales correctamente
+4. Que las alertas del decorator no se muestren todas a la vez, sino que se sincronicen para que se muestren junto con las alertas del strategy y que coincidan en tipo de alerta, colores de las alertas y tiempo de duracion de las alertas.
+5. Que los canales de notificación coincidan con los que llegan desde el backend (igual que los simulados)
+ver imagen de la interfaz del dashboard

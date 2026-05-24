@@ -3,10 +3,13 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { NotificationService, RealTimeAlert, Notification } from '../notification.service';
+import { NotificationService } from '../notification.service';
+import type { Notification } from '../notification.service';
+import type { RealTimeAlert } from '../models/risk-alert.model';
 import { UserPreferencesService } from '../user-preferences.service';
 import { AlertMessageBuilderService } from '../decorator/alert-message-builder.service';
 import { AlertPresentationResolverService } from '../behavioral/strategy/alert-presentation-resolver.service';
+import { AlertPatternIntegrationService } from '../behavioral/integration/alert-pattern-integration.service';
 import { AlertPresentationViewModel } from '../behavioral/strategy/alert-presentation-strategy.interface';
 
 /**
@@ -42,7 +45,11 @@ export class AlertCenterFacadeService {
    */
   get alertViewModels$(): Observable<AlertPresentationViewModel[]> {
     return this.alerts$.pipe(
-      map(alerts => this.alertPresentationResolver.resolveMany(alerts))
+      map(alerts =>
+        this.alertPresentationResolver
+          .resolveMany(alerts)
+          .map(view => this.alertPatternIntegration.enrichViewModel(view))
+      )
     );
   }
 
@@ -51,6 +58,7 @@ export class AlertCenterFacadeService {
     private userPreferencesService: UserPreferencesService,
     private alertMessageBuilder: AlertMessageBuilderService,
     private alertPresentationResolver: AlertPresentationResolverService,
+    private alertPatternIntegration: AlertPatternIntegrationService,
     private router: Router
   ) {}
 

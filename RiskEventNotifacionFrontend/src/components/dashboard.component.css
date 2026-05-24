@@ -115,42 +115,260 @@
   background-color: #6c757d;
 }
 
-.alert-view-card.risk-rain {
+.alert-view-card.risk-rain,
+.alert-view-card.risk-flood {
   border-left-color: #ff6b35;
 }
 
-.alert-view-card.risk-landslide {
+.alert-view-card.risk-landslide,
+.alert-view-card.risk-earthquake,
+.alert-view-card.risk-hurricane {
   border-left-color: #dc3545;
 }
 
-.alert-view-card.risk-flood {
-  border-left-color: #0066cc;
-}
-
+.alert-view-card.risk-generic,
 .alert-view-card.risk-info {
-  border-left-color: #1a3a52;
+  border-left-color: #6c757d;
 }
 
 .timeline-marker.risk-rain,
-.badge.risk-rain {
+.timeline-marker.risk-flood,
+.badge.risk-rain,
+.badge.risk-flood {
   background-color: #ff6b35;
   color: white;
 }
 
 .timeline-marker.risk-landslide,
-.badge.risk-landslide {
+.timeline-marker.risk-earthquake,
+.timeline-marker.risk-hurricane,
+.badge.risk-landslide,
+.badge.risk-earthquake,
+.badge.risk-hurricane {
   background-color: #dc3545;
   color: white;
 }
 
-.timeline-marker.risk-flood,
-.badge.risk-flood {
-  background-color: #0066cc;
+.timeline-marker.risk-generic,
+.timeline-marker.risk-info,
+.badge.risk-generic,
+.badge.risk-info {
+  background-color: #6c757d;
   color: white;
 }
 
-.timeline-marker.risk-info,
-.badge.risk-info {
-  background-color: #1a3a52;
+.simulation-note {
+  border-left: 4px solid #1a3a52;
+  background-color: #f8f9fa;
+}
+
+.alert-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.instruction-list {
+  margin-left: 0;
+  padding-left: 18px;
+  color: #495057;
+}
+
+.instruction-list li {
+  margin-bottom: 2px;
+}
+
+.decorator-preview {
+  border-left: 3px solid #ced4da;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 8px 10px;
+  white-space: pre-line;
+  color: #495057;
+}
+
+/* Sincronización visual Strategy + Decorator + Dashboard */
+.risk-banner {
+  border-left: 5px solid #6c757d;
+  background-color: #f8f9fa;
+}
+
+.risk-banner.risk-rain,
+.risk-banner.risk-flood {
+  border-left-color: #ff6b35;
+  background-color: #fff3cd;
+}
+
+.risk-banner.risk-landslide,
+.risk-banner.risk-earthquake,
+.risk-banner.risk-hurricane {
+  border-left-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.risk-banner.risk-generic,
+.risk-banner.risk-info {
+  border-left-color: #6c757d;
+  background-color: #f8f9fa;
+}
+
+.risk-banner-icon {
+  font-size: 1.5rem;
+}
+
+.risk-status-card {
+  border-top: 5px solid #6c757d !important;
+}
+
+.risk-status-card.risk-rain,
+.risk-status-card.risk-flood {
+  border-top-color: #ff6b35 !important;
+}
+
+.risk-status-card.risk-landslide,
+.risk-status-card.risk-earthquake,
+.risk-status-card.risk-hurricane {
+  border-top-color: #dc3545 !important;
+}
+
+.risk-status-card.risk-generic,
+.risk-status-card.risk-info {
+  border-top-color: #6c757d !important;
+}
+
+.risk-status-text.risk-rain,
+.risk-status-text.risk-flood {
+  color: #ff6b35;
+}
+
+.risk-status-text.risk-landslide,
+.risk-status-text.risk-earthquake,
+.risk-status-text.risk-hurricane {
+  color: #dc3545;
+}
+
+.risk-status-text.risk-generic,
+.risk-status-text.risk-info {
+  color: #6c757d;
+}
+
+.risk-status-icon {
+  font-size: 2rem;
+  opacity: 0.35;
+}
+
+.risk-status-icon.risk-rain,
+.risk-status-icon.risk-flood {
+  color: #ff6b35;
+}
+
+.risk-status-icon.risk-landslide,
+.risk-status-icon.risk-earthquake,
+.risk-status-icon.risk-hurricane {
+  color: #dc3545;
+}
+
+.risk-status-icon.risk-generic,
+.risk-status-icon.risk-info {
+  color: #6c757d;
+}
+
+.decorator-badge.risk-rain,
+.decorator-badge.risk-flood {
+  background-color: #ff6b35;
   color: white;
+}
+
+.decorator-badge.risk-landslide,
+.decorator-badge.risk-earthquake,
+.decorator-badge.risk-hurricane {
+  background-color: #dc3545;
+  color: white;
+}
+
+.decorator-badge.risk-generic,
+.decorator-badge.risk-info {
+  background-color: #6c757d;
+  color: white;
+}
+
+.decorator-preview.risk-rain,
+.decorator-preview.risk-flood {
+  border-left-color: #ff6b35;
+  background-color: #fff8f1;
+}
+
+.decorator-preview.risk-landslide,
+.decorator-preview.risk-earthquake,
+.decorator-preview.risk-hurricane {
+  border-left-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.decorator-preview.risk-generic,
+.decorator-preview.risk-info {
+  border-left-color: #6c757d;
+  background-color: #f8f9fa;
+}
+
+.backend-alert-summary {
+  border-left: 4px solid #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.backend-alert-summary.risk-rain,
+.backend-alert-summary.risk-flood {
+  border-left-color: #ff6b35;
+  background-color: #fff8f1;
+}
+
+.backend-alert-summary.risk-landslide,
+.backend-alert-summary.risk-earthquake,
+.backend-alert-summary.risk-hurricane {
+  border-left-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.channel-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.channel-item.channel-active {
+  border-color: rgba(40, 167, 69, 0.25);
+  background-color: #f3fff6;
+}
+
+.channel-item.channel-inactive {
+  opacity: 0.68;
+}
+
+.channel-item .form-check-input:disabled {
+  opacity: 0.85;
+}
+
+.risk-banner.risk-rain .risk-banner-icon,
+.risk-banner.risk-flood .risk-banner-icon,
+.risk-status-icon.risk-rain,
+.risk-status-icon.risk-flood {
+  color: #ff6b35 !important;
+}
+
+.risk-banner.risk-landslide .risk-banner-icon,
+.risk-banner.risk-earthquake .risk-banner-icon,
+.risk-banner.risk-hurricane .risk-banner-icon,
+.risk-status-icon.risk-landslide,
+.risk-status-icon.risk-earthquake,
+.risk-status-icon.risk-hurricane {
+  color: #dc3545 !important;
+}
+
+.risk-banner.risk-generic .risk-banner-icon,
+.risk-banner.risk-info .risk-banner-icon,
+.risk-status-icon.risk-generic,
+.risk-status-icon.risk-info {
+  color: #6c757d !important;
 }

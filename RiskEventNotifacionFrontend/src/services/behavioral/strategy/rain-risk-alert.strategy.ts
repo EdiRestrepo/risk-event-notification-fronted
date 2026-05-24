@@ -1,30 +1,26 @@
-import type { RealTimeAlert } from '../../notification.service';
+import type { RealTimeAlert } from '../../models/risk-alert.model';
 import { AlertPresentationStrategy, AlertPresentationViewModel } from './alert-presentation-strategy.interface';
-import { messageContains } from './alert-keywords.util';
+import { baseViewModelFields, messageContains } from './alert-keywords.util';
 
 /** Estrategia para lluvias intensas y fenomenos meteorologicos asociados. */
 export class RainRiskAlertStrategy implements AlertPresentationStrategy {
   canHandle(alert: RealTimeAlert): boolean {
-    return messageContains(alert, ['lluvia', 'lluvias', 'granizada', 'vientos']);
-  }
+    if (alert.content.eventType === 1) return true;
+    if ([2, 3, 4, 5, 6].includes(alert.content.eventType)) return false;
 
-  /** Método principal del patrón GoF Strategy */
-  execute(alert: RealTimeAlert): AlertPresentationViewModel {
-    return this.buildViewModel(alert);
+    return messageContains(alert, ['lluvia', 'lluvias', 'granizada']);
   }
 
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
-      alert,
-      title: 'Alerta por lluvias intensas',
-      message: alert.message,
-      riskLabel: 'NARANJA',
+      ...baseViewModelFields(alert),
+      title: alert.content.title || 'Alerta por lluvias intensas',
       iconClass: 'bi bi-cloud-rain-fill text-white',
       visualClass: 'risk-rain',
-      recommendation: 'Evite zonas de ladera, quebradas y pasos deprimidos mientras persistan las lluvias.',
+      riskLabel: 'NARANJA - ALTO',
       priority: 'ALTA',
       requiresImmediateAction: true,
-      autoCloseMilliseconds: 25000
+      recommendation: 'Evite zonas de ladera, quebradas y pasos deprimidos mientras persistan las lluvias.'
     };
   }
 }

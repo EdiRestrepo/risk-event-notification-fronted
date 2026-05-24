@@ -1,5 +1,6 @@
-import type { RealTimeAlert } from '../../notification.service';
+import type { RealTimeAlert } from '../../models/risk-alert.model';
 import { AlertPresentationStrategy, AlertPresentationViewModel } from './alert-presentation-strategy.interface';
+import { baseViewModelFields } from './alert-keywords.util';
 
 /** Estrategia por defecto para alertas informativas no clasificadas. */
 export class DefaultRiskAlertStrategy implements AlertPresentationStrategy {
@@ -7,23 +8,16 @@ export class DefaultRiskAlertStrategy implements AlertPresentationStrategy {
     return !!alert;
   }
 
-  /** Método principal del patrón GoF Strategy */
-  execute(alert: RealTimeAlert): AlertPresentationViewModel {
-    return this.buildViewModel(alert);
-  }
-
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
-      alert,
-      title: 'Alerta informativa del sistema',
-      message: alert.message,
-      riskLabel: 'INFORMATIVA',
+      ...baseViewModelFields(alert),
+      title: alert.content.title || 'Alerta informativa del sistema',
       iconClass: 'bi bi-info-circle-fill text-white',
-      visualClass: 'risk-info',
-      recommendation: 'Revise la información y manténgase atento a nuevas actualizaciones oficiales.',
-      priority: 'MEDIA',
+      visualClass: 'risk-generic',
+      riskLabel: 'GRIS - INFORMATIVA',
+      priority: 'BAJA',
       requiresImmediateAction: false,
-      autoCloseMilliseconds: 20000
+      recommendation: 'Revise la informacion y mantengase atento a nuevas actualizaciones oficiales.'
     };
   }
 }
