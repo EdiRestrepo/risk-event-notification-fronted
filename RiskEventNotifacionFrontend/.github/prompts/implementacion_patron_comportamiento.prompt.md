@@ -1,5 +1,31 @@
-Como de momento no tengo la comunicacion con el backend, quiero que simules las alertas como si estuvieran llegando desde el backend, cada 20segundos y que se desaparezca a los 5segundos, para ver reflejado la implementacion de los patrones observer y strategy, mostrando diferentes tipos de alertas (Sin modificar los patrones method factory y decorator ya implementados).
-Teniendo en cuenta que la alerta desde el bacekend va a llegar con esta estructura:
+# Implementación de Patrones de Comportamiento: Simulación de Alertas
+
+## Objetivo
+Simular alertas del backend para demostrar los patrones **Observer** y **Strategy** funcionando correctamente con diferentes tipos de alertas.
+
+## Requisitos
+
+### 1. Simulación de Alertas
+- Generar alertas cada 20 segundos (mientras no haya conexión real con backend)
+- Las alertas desaparecen automáticamente a los 5 segundos (para demostración rápida)
+- Estructura: usar contenido del backend (ver abajo), extraer `message` para que Strategy la interprete
+
+### 2. Tipos de Alertas a Simular
+Generar alertas variadas que disparen diferentes estrategias:
+- **Lluvias intensas** → RainRiskAlertStrategy (NARANJA, 25s)
+- **Deslizamientos** → LandslideRiskAlertStrategy (ROJO, CRITICA, 35s)
+- **Inundaciones** → FloodRiskAlertStrategy (NARANJA, 30s)
+- **Genérica/Informativa** → DefaultRiskAlertStrategy (GRIS, 20s)
+
+### 3. Flujo Esperado
+1. Sistema genera alerta simulada (estructura backend) → `pushAlert(alert)`
+2. Observer (EventBus) publica → `notifySubscribers()`
+3. Strategy resuelve presentación según `message` → `resolve(alert)` → `execute(alert)`
+4. Dashboard recibe y renderiza diferenciado
+5. Auto-close a los 5 segundos (tiempo fijo para simulación)
+
+## Estructura de Alerta del Backend (Simulada)
+```json
 {
   "title": "Nueva alerta de riesgo",
   "content": {
@@ -17,10 +43,26 @@ Teniendo en cuenta que la alerta desde el bacekend va a llegar con esta estructu
       "Evite transitar por zonas inundables.",
       "No cruce quebradas o corrientes de agua."
     ],
-    "channels": [
-      1,
-      2,
-      3
-    ]
+    "channels": [1, 2, 3]
   }
 }
+```
+
+**Mapeo a RealTimeAlert (interna):**
+- `id` = `content.id`
+- `message` = `content.message` (Strategy la analiza para elegir estrategia)
+- `timestamp` = `content.createdAt`
+- `simulated` = `true`
+
+## Restricciones
+- ❌ NO modificar Factory Method (NotificationChannelCreator)
+- ❌ NO modificar Decorator (AlertMessageBuilder)
+- ✅ Observer y Strategy deben trabajar visibles y coordinados
+- ❌ NO implementar pruebas de aceptación
+
+## Validación
+- ✅ Alertas simuladas cada 20 segundos con estructura backend
+- ✅ Cada alerta desaparece a los 5 segundos (5000ms fijo)
+- ✅ Observer notifica: verificar en consola que `subscribers.update()` se invoca
+- ✅ Strategy elige correcta: consola debe mostrar qué estrategia se usó
+- ✅ Dashboard muestra alertas diferenciadas por tipo (colores, iconos, tiempos reales de Strategy)
