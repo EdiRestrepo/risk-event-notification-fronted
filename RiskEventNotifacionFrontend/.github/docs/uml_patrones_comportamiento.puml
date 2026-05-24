@@ -1,0 +1,102 @@
+@startuml Observer_Alertas_Riesgo
+skinparam classAttributeIconSize 0
+
+interface RiskAlertSubject {
+  +attach(observer: RiskAlertObserver)
+  +publishAlert(alert: RealTimeAlert): void
+  +removeAlert(alertId: string): void
+  +clearAlerts(): void
+}
+
+interface RiskAlertObserver {
+  +update(alerts: RealTimeAlert[]): void
+}
+
+class RiskAlertEventBusService {
+  -alertsSubject: BehaviorSubject<RealTimeAlert[]>
+  +alerts$: Observable<RealTimeAlert[]>
+  +alertCount$: Observable<number>
+  +attach(observer: RiskAlertObserver)
+  +publishAlert(alert: RealTimeAlert): void
+  +removeAlert(alertId: string): void
+  +clearAlerts(): void
+  +getSnapshot(): RealTimeAlert[]
+}
+
+class NotificationService {
+  +alerts$: Observable<RealTimeAlert[]>
+  +startConnection(): void
+  +receiveNotifications(): void
+  -pushAlert(alert: RealTimeAlert): void
+  +removeAlert(alertId: string): void
+}
+
+class AlertCenterFacadeService {
+  +alerts$: Observable<RealTimeAlert[]>
+  +alertViewModels$: Observable<AlertPresentationViewModel[]>
+  +initializeAlertCenter(userId: string): void
+  +removeAlert(alertId: string): void
+}
+
+class DashboardComponent {
+  -realTimeAlerts$: Observable<RealTimeAlert[]>
+  -alertViewModels$: Observable<AlertPresentationViewModel[]>
+  +removeAlert(alertId: string): void
+}
+
+RiskAlertSubject <|.. RiskAlertEventBusService
+RiskAlertObserver <|.. DashboardComponent
+NotificationService --> RiskAlertEventBusService : publica alertas
+AlertCenterFacadeService --> NotificationService : expone alerts$
+DashboardComponent --> AlertCenterFacadeService : observa flujo
+@enduml
+
+@startuml Strategy_Presentacion_Alertas
+skinparam classAttributeIconSize 0
+
+interface AlertPresentationStrategy {
+  +canHandle(alert: RealTimeAlert): boolean
+  +buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel
+}
+
+class AlertPresentationResolverService {
+  -strategies: AlertPresentationStrategy[]
+  +resolve(alert: RealTimeAlert): AlertPresentationViewModel
+  +resolveMany(alerts: RealTimeAlert[]): AlertPresentationViewModel[]
+}
+
+class RainRiskAlertStrategy
+class LandslideRiskAlertStrategy
+class FloodRiskAlertStrategy
+class DefaultRiskAlertStrategy
+
+class AlertPresentationViewModel {
+  +alert: RealTimeAlert
+  +title: string
+  +message: string
+  +riskLabel: string
+  +iconClass: string
+  +visualClass: string
+  +recommendation: string
+  +priority: AlertPriority
+  +requiresImmediateAction: boolean
+  +autoCloseMilliseconds: number
+}
+
+class AlertCenterFacadeService {
+  +alertViewModels$: Observable<AlertPresentationViewModel[]>
+}
+
+class DashboardComponent {
+  -alertViewModels$: Observable<AlertPresentationViewModel[]>
+}
+
+AlertPresentationStrategy <|.. RainRiskAlertStrategy
+AlertPresentationStrategy <|.. LandslideRiskAlertStrategy
+AlertPresentationStrategy <|.. FloodRiskAlertStrategy
+AlertPresentationStrategy <|.. DefaultRiskAlertStrategy
+AlertPresentationResolverService o--> AlertPresentationStrategy
+AlertPresentationResolverService --> AlertPresentationViewModel
+AlertCenterFacadeService --> AlertPresentationResolverService
+DashboardComponent --> AlertCenterFacadeService
+@enduml

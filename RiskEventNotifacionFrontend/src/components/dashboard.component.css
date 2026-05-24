@@ -96,3 +96,61 @@
     width: 100%;
   }
 }
+
+/* Patrones de comportamiento: Strategy aplica clases visuales por tipo de riesgo */
+.alert-view-card {
+  border-left: 4px solid #6c757d;
+  padding-left: 12px;
+}
+
+.timeline-marker {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: #6c757d;
+}
+
+.alert-view-card.risk-rain {
+  border-left-color: #ff6b35;
+}
+
+.alert-view-card.risk-landslide {
+  border-left-color: #dc3545;
+}
+
+.alert-view-card.risk-flood {
+  border-left-color: #0066cc;
+}
+
+.alert-view-card.risk-info {
+  border-left-color: #1a3a52;
+}
+
+.timeline-marker.risk-rain,
+.badge.risk-rain {
+  background-color: #ff6b35;
+  color: white;
+}
+
+.timeline-marker.risk-landslide,
+.badge.risk-landslide {
+  background-color: #dc3545;
+  color: white;
+}
+
+.timeline-marker.risk-flood,
+.badge.risk-flood {
+  background-color: #0066cc;
+  color: white;
+}
+
+.timeline-marker.risk-info,
+.badge.risk-info {
+  background-color: #1a3a52;
+  color: white;
+}

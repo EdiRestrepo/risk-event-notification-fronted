@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { NotificationService, RealTimeAlert, Notification } from '../notification.service';
 import { UserPreferencesService } from '../user-preferences.service';
 import { AlertMessageBuilderService } from '../decorator/alert-message-builder.service';
+import { AlertPresentationResolverService } from '../behavioral/strategy/alert-presentation-resolver.service';
+import { AlertPresentationViewModel } from '../behavioral/strategy/alert-presentation-strategy.interface';
 
 /**
  * AlertCenterFacadeService - Patrón FACADE
@@ -33,10 +36,21 @@ export class AlertCenterFacadeService {
     return this.notificationService.alerts$;
   }
 
+  /**
+   * Observable enriquecido por Strategy: la vista recibe alertas ya clasificadas
+   * con icono, prioridad, recomendacion y clase visual.
+   */
+  get alertViewModels$(): Observable<AlertPresentationViewModel[]> {
+    return this.alerts$.pipe(
+      map(alerts => this.alertPresentationResolver.resolveMany(alerts))
+    );
+  }
+
   constructor(
     private notificationService: NotificationService,
     private userPreferencesService: UserPreferencesService,
     private alertMessageBuilder: AlertMessageBuilderService,
+    private alertPresentationResolver: AlertPresentationResolverService,
     private router: Router
   ) {}
 

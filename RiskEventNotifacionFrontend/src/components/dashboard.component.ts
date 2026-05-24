@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 import { AlertCenterFacadeService } from '../services/facade/alert-center.facade';
 import { RealTimeAlert } from '../services/notification.service';
+import { AlertPresentationViewModel } from '../services/behavioral/strategy/alert-presentation-strategy.interface';
 
 /**
  * DashboardComponent
@@ -38,6 +39,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Observable de alertas activas (se usa con async pipe en la vista) */
   realTimeAlerts$: Observable<RealTimeAlert[]>;
 
+  /** Alertas transformadas por Strategy para la presentacion en pantalla */
+  alertViewModels$: Observable<AlertPresentationViewModel[]>;
+
   /** Flag para saber si las preferencias ya se cargaron del backend */
   preferencesLoaded = true; // Inicializar como true para permitir interacción inmediata
 
@@ -61,8 +65,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private facade: AlertCenterFacadeService,
     private cdr: ChangeDetectorRef
   ) {
-    // Obtener observable de alertas desde el Facade
+    // Obtener observables de alertas desde el Facade
     this.realTimeAlerts$ = this.facade.alerts$;
+    this.alertViewModels$ = this.facade.alertViewModels$;
   }
 
   ngOnInit(): void {

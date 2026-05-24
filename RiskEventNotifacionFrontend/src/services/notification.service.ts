@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
 import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
 import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
@@ -7,6 +7,8 @@ import { EmailChannelCreator } from './factory-method/creators/email-channel-cre
 import { PushChannelCreator } from './factory-method/creators/push-channel-creator';
 import { WhatsAppChannelCreator } from './factory-method/creators/whatsapp-channel-creator';
 import * as signalR from '@microsoft/signalr';
+import { RiskAlertEventBusService } from './behavioral/observer/risk-alert-event-bus.service';
+import { AlertPresentationResolverService } from './behavioral/strategy/alert-presentation-resolver.service';
 
 /**
  * Modelo para representar una notificación
@@ -51,12 +53,13 @@ export class NotificationService {
 
   private hubConnection!: signalR.HubConnection;
   private notificationHistory: Notification[] = [];
-  private alertsSubject = new BehaviorSubject<RealTimeAlert[]>([]);
   private simulationInterval: any = null;
   private isBackendConnected = false;
 
   /** Observable público de alertas activas (usar con async pipe en la vista) */
-  public alerts$: Observable<RealTimeAlert[]> = this.alertsSubject.asObservable();
+  public get alerts$(): Observable<RealTimeAlert[]> {
+    return this.alertEventBus.alerts$;
+  }
 
   /** Mensajes simulados para cuando el backend no está disponible */
   private simulatedMessages: string[] = [
@@ -70,7 +73,11 @@ export class NotificationService {
     'Alerta temprana por saturación de suelos en Envigado'
   ];
 
-  constructor(private ngZone: NgZone) {}
+  constructor(
+    private ngZone: NgZone,
+    private alertEventBus: RiskAlertEventBusService,
+    private alertPresentationResolver: AlertPresentationResolverService
+  ) {}
   /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
   private creators = new Map<string, NotificationChannelCreator>([
     ['sms', new SMSChannelCreator()],
@@ -321,10 +328,9 @@ export class NotificationService {
    */
   private pushAlert(alert: RealTimeAlert): void {
     this.ngZone.run(() => {
-      const updated = [alert, ...this.alertsSubject.value];
-      this.alertsSubject.next(updated);
+      this.alertEventBus.publishAlert(alert);
 
-      const duration = alert.simulated ? 10000 : 20000;
+      const duration = this.alertPresentationResolver.resolve(alert).autoCloseMilliseconds;
       setTimeout(() => {
         this.ngZone.run(() => {
           this.removeAlert(alert.id);
@@ -337,8 +343,7 @@ export class NotificationService {
    * Elimina una alerta del array por ID
    */
   removeAlert(alertId: string): void {
-    const updated = this.alertsSubject.value.filter(a => a.id !== alertId);
-    this.alertsSubject.next(updated);
+    this.alertEventBus.removeAlert(alertId);
   }
 
   /**
