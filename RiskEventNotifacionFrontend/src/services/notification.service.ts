@@ -73,6 +73,89 @@ export class NotificationService {
     'Alerta temprana por saturación de suelos en Envigado'
   ];
 
+  /** Estructuras de alertas del backend para simulación */
+  private simulatedBackendAlerts = [
+    {
+      title: "Nueva alerta de riesgo",
+      content: {
+        id: "3f0b2d8e-6b2a-4f8f-9c35-2a8d1e9b7c11",
+        eventType: 1,
+        riskLevel: 3,
+        title: "Alerta por lluvias intensas",
+        message: "Se reportan lluvias intensas con posible riesgo de inundación en la zona.",
+        location: "Medellín - Valle de Aburrá",
+        source: "SIATA",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        status: "Active",
+        instructions: [
+          "Evite transitar por zonas inundables.",
+          "No cruce quebradas o corrientes de agua."
+        ],
+        channels: [1, 2, 3]
+      }
+    },
+    {
+      title: "Nueva alerta de riesgo",
+      content: {
+        id: "2e1c3d4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
+        eventType: 2,
+        riskLevel: 4,
+        title: "Alerta por deslizamiento",
+        message: "Riesgo de deslizamiento en zona rural de Bello por saturación de suelos.",
+        location: "Bello - Zona Rural",
+        source: "SIATA",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        status: "Active",
+        instructions: [
+          "Aléjese de taludes y viviendas en ladera.",
+          "Atienda instrucciones de organismos de emergencia."
+        ],
+        channels: [1, 2, 3]
+      }
+    },
+    {
+      title: "Nueva alerta de riesgo",
+      content: {
+        id: "5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c",
+        eventType: 3,
+        riskLevel: 3,
+        title: "Alerta por inundación",
+        message: "Nivel del río Medellín en aumento - Creciente súbita potencial.",
+        location: "Medellín - Cauce Río Medellín",
+        source: "SIATA",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        status: "Active",
+        instructions: [
+          "No cruce corrientes de agua.",
+          "Muévase hacia zonas altas."
+        ],
+        channels: [1, 2, 3]
+      }
+    },
+    {
+      title: "Nueva alerta de riesgo",
+      content: {
+        id: "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
+        eventType: 0,
+        riskLevel: 2,
+        title: "Alerta informativa",
+        message: "Monitoreo activo de condiciones meteorológicas en la región.",
+        location: "Área Metropolitana",
+        source: "SIATA",
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        status: "Active",
+        instructions: [
+          "Manténgase atento a nuevas actualizaciones."
+        ],
+        channels: [1, 2]
+      }
+    }
+  ];
+
   constructor(
     private ngZone: NgZone,
     private alertEventBus: RiskAlertEventBusService,
@@ -275,28 +358,28 @@ export class NotificationService {
     this.hubConnection
       .start()
       .then(() => {
-        console.log('SignalR conectado - Usando alertas del backend');
+        console.log('✅ SignalR conectado - Usando alertas del backend');
         this.isBackendConnected = true;
         this.stopSimulation();
       })
       .catch(err => {
-        console.warn('Backend no disponible, activando modo simulación:', err.message);
+        console.warn('⚠️  Backend no disponible, activando modo simulación:', err.message);
         this.isBackendConnected = false;
-        //this.startSimulation();
+        this.startSimulation();
       });
 
     // Si se reconecta, detener simulación
     this.hubConnection.onreconnected(() => {
-      console.log('SignalR reconectado - Deteniendo simulación');
+      console.log('✅ SignalR reconectado - Deteniendo simulación');
       this.isBackendConnected = true;
       this.stopSimulation();
     });
 
     // Si se desconecta, iniciar simulación
     this.hubConnection.onclose(() => {
-      console.warn('SignalR desconectado - Activando simulación');
+      console.warn('⚠️  SignalR desconectado - Activando simulación');
       this.isBackendConnected = false;
-      //this.startSimulation();
+      this.startSimulation();
     });
   }
 
@@ -328,11 +411,27 @@ export class NotificationService {
    */
   private pushAlert(alert: RealTimeAlert): void {
     this.ngZone.run(() => {
+      // Publicar en el EventBus (Observer Pattern)
       this.alertEventBus.publishAlert(alert);
 
-      const duration = this.alertPresentationResolver.resolve(alert).autoCloseMilliseconds;
+      // Resolver estrategia (Strategy Pattern)
+      const viewModel = this.alertPresentationResolver.resolve(alert);
+      const duration = viewModel.autoCloseMilliseconds;
+
+      // Log del Strategy Pattern: muestra qué estrategia se usó
+      console.group('🎯 [STRATEGY] Estrategia resuelta');
+      console.log('Alert ID:', alert.id);
+      console.log('Mensaje analizado:', alert.message);
+      console.log('Estrategia seleccionada:', viewModel.title);
+      console.log('Prioridad:', viewModel.priority);
+      console.log('Auto-close en:', duration, 'ms');
+      console.log('ViewModel:', viewModel);
+      console.groupEnd();
+
+      // Programar auto-cierre
       setTimeout(() => {
         this.ngZone.run(() => {
+          console.log(`⏰ [AUTO-CLOSE] Removiendo alerta: ${alert.id}`);
           this.removeAlert(alert.id);
         });
       }, duration);
@@ -373,17 +472,31 @@ export class NotificationService {
   }
 
   /**
-   * Emite una alerta simulada aleatoria
+   * Emite una alerta simulada aleatoria con estructura del backend
    */
   private emitSimulatedAlert(): void {
-    const randomIndex = Math.floor(Math.random() * this.simulatedMessages.length);
+    const randomIndex = Math.floor(Math.random() * this.simulatedBackendAlerts.length);
+    const backendAlert = this.simulatedBackendAlerts[randomIndex];
+    const content = backendAlert.content;
+
+    // Mapear estructura del backend a RealTimeAlert interna
     const alert: RealTimeAlert = {
-      id: `sim_${Date.now()}`,
-      message: this.simulatedMessages[randomIndex],
-      timestamp: new Date(),
+      id: content.id,
+      message: content.message, // Strategy analiza este mensaje para elegir estrategia
+      timestamp: new Date(content.createdAt),
       simulated: true
     };
+
+    // Log del Observer Pattern: muestra que la alerta se publica
+    console.group('📡 [OBSERVER] Alerta publicada al EventBus');
+    console.log('ID:', alert.id);
+    console.log('Mensaje:', alert.message);
+    console.log('Tipo:', content.title);
+    console.groupEnd();
+
     this.pushAlert(alert);
-    console.log('🧪 Alerta simulada:', alert.message);
+
+    // Log adicional para seguimiento
+    console.log(`🧪 [SIM] Alerta simulada generada: ${content.title}`);
   }
 }

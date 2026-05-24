@@ -56,6 +56,11 @@ export class RiskAlertEventBusService implements RiskAlertSubject {
    */
   private notifySubscribers(): void {
     const currentAlerts = this.alertsSubject.value;
+    console.group(`👥 [OBSERVER] Notificando ${this.subscribers.length} suscriptor(es)`);
+    console.log('Alertas activas:', currentAlerts.length);
+    currentAlerts.forEach(a => console.log(`  - ${a.id}: ${a.message.substring(0, 50)}...`));
+    console.groupEnd();
+
     this.subscribers.forEach(subscriber => subscriber.update(currentAlerts));
   }
 
