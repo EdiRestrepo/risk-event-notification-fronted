@@ -8,6 +8,11 @@ export class FloodRiskAlertStrategy implements AlertPresentationStrategy {
     return messageContains(alert, ['inundacion', 'creciente', 'rio', 'quebrada', 'cauce', 'nivel del rio']);
   }
 
+  /** Método principal del patrón GoF Strategy */
+  execute(alert: RealTimeAlert): AlertPresentationViewModel {
+    return this.buildViewModel(alert);
+  }
+
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
       alert,

@@ -8,6 +8,11 @@ export class LandslideRiskAlertStrategy implements AlertPresentationStrategy {
     return messageContains(alert, ['deslizamiento', 'ladera', 'saturacion', 'suelos', 'talud']);
   }
 
+  /** Método principal del patrón GoF Strategy */
+  execute(alert: RealTimeAlert): AlertPresentationViewModel {
+    return this.buildViewModel(alert);
+  }
+
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
       alert,

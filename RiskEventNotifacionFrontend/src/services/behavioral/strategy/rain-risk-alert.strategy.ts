@@ -8,6 +8,11 @@ export class RainRiskAlertStrategy implements AlertPresentationStrategy {
     return messageContains(alert, ['lluvia', 'lluvias', 'granizada', 'vientos']);
   }
 
+  /** Método principal del patrón GoF Strategy */
+  execute(alert: RealTimeAlert): AlertPresentationViewModel {
+    return this.buildViewModel(alert);
+  }
+
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
       alert,

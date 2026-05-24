@@ -43,7 +43,7 @@ Según la imagen de referencia, verifica que exista:
    - Debe tener método `notifySubscribers()` o `notify()` para notificar a todos
    - Debe mantener un estado principal (`mainState`) que refleje cambios en alertas
 
-3. **Suscriptores Concretos**: Componentes que implementen Observer
+3. **Suscriptores Concretos (o similares)**: Componentes que implementen Observer
    - Dashboard o componentes visuales deben implementar la interfaz Observer
    - Cada uno debe tener su propio método `update(context)` con lógica específica
    - Deben registrarse con el PublisherEvent Bus en su inicialización
@@ -70,4 +70,4 @@ Si la implementación es correcta y sigue los diagramas:
 Si hay desviaciones o problemas:
 - Haz los ajustes necesarios
 - Asegúrate de que Observer y Strategy trabajen juntos correctamente
-- Simula la llegada de diferentes tipos de alertas desde el backend para demostrar el flujo completo
+

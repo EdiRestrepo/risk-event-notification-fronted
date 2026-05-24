@@ -7,6 +7,11 @@ export class DefaultRiskAlertStrategy implements AlertPresentationStrategy {
     return !!alert;
   }
 
+  /** Método principal del patrón GoF Strategy */
+  execute(alert: RealTimeAlert): AlertPresentationViewModel {
+    return this.buildViewModel(alert);
+  }
+
   buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel {
     return {
       alert,
