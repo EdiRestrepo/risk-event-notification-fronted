@@ -32,7 +32,7 @@
 ## Flujo final
 
 ```txt
-Alerta simulada del backend
+Alerta del backend
         ↓
 Strategy: clasifica tipo, color, prioridad y duración
         ↓

@@ -223,10 +223,10 @@
                               <li *ngFor="let instruction of view.instructions">{{ instruction }}</li>
                             </ul>
 
-                            <div class="decorator-preview small mb-2" [ngClass]="view.visualClass" *ngIf="view.decoratedMessage">
+                            <!-- <div class="decorator-preview small mb-2" [ngClass]="view.visualClass" *ngIf="view.decoratedMessage">
                               <div class="fw-semibold mb-1">Mensaje enriquecido por Decorator, sincronizado con esta alerta:</div>
                               <div>{{ view.decoratedMessage }}</div>
-                            </div>
+                            </div> -->
 
                             <p class="text-muted small mb-0">
                               Recibida: {{ view.receivedAt | date:'hh:mm:ss a' }}
