@@ -1,0 +1,108 @@
+<mxfile host="65bd71144e">
+    <diagram name="UML Observer Risk Alerts" id="0">
+        <mxGraphModel dx="1611" dy="2088" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2050" pageHeight="1250" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="patternLabel" value="Patrón de comportamiento: Observer" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="-60" width="500" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="notificationService" value="&lt;b&gt;NotificationService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(EVENT SOURCE / CLIENT)&lt;/i&gt;&lt;hr&gt;- alertEventBus: RiskAlertEventBusService&lt;br&gt;- alertPresentationResolver: AlertPresentationResolverService&lt;br&gt;- alertPatternIntegration: AlertPatternIntegrationService&lt;br&gt;- autoRemoveTimeouts: Map&amp;lt;string, ReturnType&amp;lt;typeof setTimeout&amp;gt;&amp;gt;&lt;hr&gt;+ get alerts$(): Observable&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;+ startConnection(): void&lt;br&gt;+ receiveNotifications(): void&lt;br&gt;- pushAlert(alert: RealTimeAlert): void&lt;br&gt;+ removeAlert(alertId): void&lt;br&gt;+ stopConnection(): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="180" width="530" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="subjectInterface" value="&lt;i&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;RiskAlertSubject&lt;/b&gt;&lt;br&gt;&lt;i&gt;(SUBJECT)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ attach(observer: RiskAlertObserver): () =&amp;gt; void&lt;br&gt;+ publishAlert(alert: RealTimeAlert): void&lt;br&gt;+ removeAlert(alertId: string): void&lt;br&gt;+ clearAlerts(): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="120" width="520" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="eventBus" value="&lt;b&gt;RiskAlertEventBusService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE SUBJECT / PUBLISHER)&lt;/i&gt;&lt;hr&gt;- alertsSubject: BehaviorSubject&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;+ alerts$: Observable&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;+ alertCount$: Observable&amp;lt;number&amp;gt;&lt;hr&gt;+ attach(observer: RiskAlertObserver): () =&amp;gt; void&lt;br&gt;+ publishAlert(alert: RealTimeAlert): void&lt;br&gt;+ removeAlert(alertId: string): void&lt;br&gt;+ clearAlerts(): void&lt;br&gt;+ getSnapshot(): RealTimeAlert[]" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#fff2cc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="710" y="430" width="580" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="observerInterface" value="&lt;i&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;RiskAlertObserver&lt;/b&gt;&lt;br&gt;&lt;i&gt;(OBSERVER / SUBSCRIBER)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ update(alerts: RealTimeAlert[]): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1510" y="180" width="390" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="dashboard" value="&lt;b&gt;DashboardComponent&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE OBSERVER / RxJS SUBSCRIBER)&lt;/i&gt;&lt;hr&gt;- realTimeAlerts$: Observable&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;- alertViewModels$: Observable&amp;lt;AlertPresentationViewModel[]&amp;gt;&lt;br&gt;- currentAlertView$: Observable&amp;lt;AlertPresentationViewModel | null&amp;gt;&lt;hr&gt;+ ngOnInit(): void&lt;br&gt;+ removeAlert(alertId: string): void&lt;br&gt;+ getRiskShortLabel(view): string&lt;br&gt;+ getAutoCloseSeconds(view): number" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="430" width="520" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="facade" value="&lt;b&gt;AlertCenterFacadeService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(OBSERVER ADAPTER / FACADE)&lt;/i&gt;&lt;hr&gt;- notificationService: NotificationService&lt;br&gt;- alertPresentationResolver: AlertPresentationResolverService&lt;br&gt;- alertPatternIntegration: AlertPatternIntegrationService&lt;hr&gt;+ get alerts$(): Observable&amp;lt;RealTimeAlert[]&amp;gt;&lt;br&gt;+ get alertViewModels$(): Observable&amp;lt;AlertPresentationViewModel[]&amp;gt;&lt;br&gt;+ removeAlert(alertId): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="760" width="520" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="realTimeAlert" value="&lt;b&gt;RealTimeAlert&lt;/b&gt;&lt;br&gt;&lt;i&gt;(EVENT DATA)&lt;/i&gt;&lt;hr&gt;+ title: string&lt;br&gt;+ content: BackendRiskAlertContent&lt;br&gt;+ receivedAt: Date&lt;br&gt;+ simulated: boolean&lt;hr&gt;&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#d5e8d4;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="780" width="520" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="observerNote" value="El Subject concreto mantiene el estado de alertas y notifica a suscriptores mediante alerts$ / alertCount$ o mediante attach(observer)." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="60" width="530" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="rxjsNote" value="En Angular, el Dashboard actúa como suscriptor reactivo usando Observables; el contrato RiskAlertObserver queda disponible para observadores imperativos." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1450" y="1020" width="520" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="eNotifyBus" value="publica&#xa;publishAlert(alert)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="notificationService" target="eventBus" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="650" y="380"/>
+                            <mxPoint x="650" y="555"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eBusSubject" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="eventBus" target="subjectInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1000" y="350"/>
+                            <mxPoint x="1000" y="350"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eSubjectObserver" value="attach(observer)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=12;endArrow=open;dashed=1;" parent="1" source="subjectInterface" target="observerInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1450" y="210"/>
+                            <mxPoint x="1450" y="210"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eBusObserver" value="observadores&#xa;alerts$ / update()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;startArrow=diamondThin;startFill=0;endArrow=open;endFill=0;" parent="1" source="eventBus" target="observerInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1400" y="555"/>
+                            <mxPoint x="1400" y="280"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eDashboardObserver" value="se suscribe&#xa;/adapta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="dashboard" target="observerInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1705" y="410"/>
+                            <mxPoint x="1705" y="410"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eDashboardFacade" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="dashboard" target="facade" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eFacadeNotification" value="consume alerts$" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="notificationService" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1320" y="870"/>
+                            <mxPoint x="1320" y="330"/>
+                            <mxPoint x="600" y="330"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eBusData" value="mantiene lista" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=open;endFill=0;" parent="1" source="eventBus" target="realTimeAlert" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1020" y="710"/>
+                            <mxPoint x="1020" y="710"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eNotificationData" value="crea / normaliza" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=12;endArrow=open;dashed=1;" parent="1" source="notificationService" target="realTimeAlert" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="330" y="750"/>
+                            <mxPoint x="1000" y="750"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
