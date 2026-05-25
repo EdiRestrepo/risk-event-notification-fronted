@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { NotificationChannel } from './factory-method/notification-channel.interface';
 import { NotificationChannelCreator } from './factory-method/notification-channel-creator';
 import { SMSChannelCreator } from './factory-method/creators/sms-channel-creator';
@@ -7,22 +7,29 @@ import { EmailChannelCreator } from './factory-method/creators/email-channel-cre
 import { PushChannelCreator } from './factory-method/creators/push-channel-creator';
 import { WhatsAppChannelCreator } from './factory-method/creators/whatsapp-channel-creator';
 import * as signalR from '@microsoft/signalr';
+import { RiskAlertEventBusService } from './behavioral/observer/risk-alert-event-bus.service';
+import { AlertPresentationResolverService } from './behavioral/strategy/alert-presentation-resolver.service';
+import { AlertPatternIntegrationService } from './behavioral/integration/alert-pattern-integration.service';
+import { ALERT_SIMULATION_INTERVAL_MILLISECONDS } from './models/risk-alert.model';
+import type { BackendRiskAlertNotification, RealTimeAlert } from './models/risk-alert.model';
+
+export type { BackendRiskAlertContent, BackendRiskAlertNotification, RealTimeAlert } from './models/risk-alert.model';
 
 /**
- * Modelo para representar una notificación
+ * Modelo para representar una notificacion enviada por canales.
  */
 export interface Notification {
   id?: string;
   title: string;
   message: string;
   recipient: string;
-  channels: string[]; // Array de nombres de canales ('sms', 'email', 'push', 'whatsapp')
+  channels: string[];
   timestamp?: Date;
   status?: 'pending' | 'sent' | 'failed';
 }
 
 /**
- * Respuesta de envío de notificación
+ * Respuesta de envio de notificacion.
  */
 export interface NotificationResponse {
   success: boolean;
@@ -32,73 +39,194 @@ export interface NotificationResponse {
 }
 
 /**
- * Modelo para alertas recibidas en tiempo real desde SignalR
- */
-export interface RealTimeAlert {
-  id: string;
-  message: string;
-  timestamp: Date;
-  simulated: boolean;
-}
-
-/**
- * Servicio de Notificación
- * Implementa el patrón Factory Method a través de NotificationChannelFactory
- * para enviar notificaciones a través de múltiples canales
+ * Servicio de Notificacion.
+ *
+ * Mantiene intacto el uso de Factory Method para enviar notificaciones por
+ * SMS, Email, Push y WhatsApp.
+ *
+ * Para el reto de comportamiento:
+ * - Observer: publica alertas en RiskAlertEventBusService.
+ * - Strategy: consulta AlertPresentationResolverService para saber cuanto
+ *   tiempo debe permanecer visible la alerta.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-
-  private hubConnection!: signalR.HubConnection;
+  private hubConnection?: signalR.HubConnection;
   private notificationHistory: Notification[] = [];
-  private alertsSubject = new BehaviorSubject<RealTimeAlert[]>([]);
-  private simulationInterval: any = null;
-  private isBackendConnected = false;
+  private simulationInterval: ReturnType<typeof setInterval> | null = null;
+  private simulationIndex = 0;
+  private readonly autoRemoveTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-  /** Observable público de alertas activas (usar con async pipe en la vista) */
-  public alerts$: Observable<RealTimeAlert[]> = this.alertsSubject.asObservable();
+  /**
+   * Mientras no exista comunicacion real con backend, este flag mantiene el
+   * sistema trabajando con respuestas simuladas que respetan el contrato real.
+   */
+  private readonly simulationModeEnabled = true;
 
-  /** Mensajes simulados para cuando el backend no está disponible */
-  private simulatedMessages: string[] = [
-    'Lluvias intensas previstas en el Valle de Aburrá durante las próximas horas',
-    'Riesgo de deslizamiento en zona rural de Bello - Precaución',
-    'Nivel del río Medellín en aumento - Monitoreo activo',
-    'Alerta por creciente súbita en quebrada La Iguaná',
-    'Probabilidad de granizada en zona nororiental de Medellín',
-    'Vientos fuertes esperados en las próximas 2 horas - Zona sur',
-    'Monitoreo activo de quebrada Santa Elena por lluvias acumuladas',
-    'Alerta temprana por saturación de suelos en Envigado'
+  /** Observable publico de alertas activas para usar con async pipe. */
+  public get alerts$(): Observable<RealTimeAlert[]> {
+    return this.alertEventBus.alerts$;
+  }
+
+  /**
+   * Alertas de prueba con la misma estructura que enviara el backend.
+   * Cada emision clona una plantilla, genera id nuevo y actualiza fechas.
+   */
+  private readonly simulatedBackendAlerts: BackendRiskAlertNotification[] = [
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000001',
+        eventType: 1,
+        riskLevel: 3,
+        title: 'Alerta por lluvias intensas',
+        message: 'Se reportan lluvias intensas con posible riesgo de inundacion en la zona.',
+        location: 'Medellin - Valle de Aburra',
+        source: 'SIATA',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Evite transitar por zonas inundables.',
+          'No cruce quebradas o corrientes de agua.'
+        ],
+        channels: [1, 2, 3]
+      }
+    },
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000002',
+        eventType: 2,
+        riskLevel: 3,
+        title: 'Creciente subita en quebrada',
+        message: 'Aumento rapido del nivel de la quebrada La Iguana por lluvia acumulada.',
+        location: 'Medellin - Comuna 13',
+        source: 'SIATA',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Alejese del cauce de la quebrada.',
+          'Dirijase a zonas altas y seguras.',
+          'Reporte emergencias a los organismos de socorro.'
+        ],
+        channels: [1, 2, 3, 4]
+      }
+    },
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000003',
+        eventType: 3,
+        riskLevel: 4,
+        title: 'Riesgo de deslizamiento',
+        message: 'Saturacion de suelos en zona de ladera con posible movimiento en masa.',
+        location: 'Bello - Sector rural',
+        source: 'SIATA',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Evacue si observa grietas, inclinacion de arboles o ruidos inusuales.',
+          'Evite permanecer cerca de taludes.',
+          'Siga las indicaciones de gestion del riesgo.'
+        ],
+        channels: [1, 2, 3, 4]
+      }
+    },
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000004',
+        eventType: 5,
+        riskLevel: 4,
+        title: 'Alerta critica por terremoto',
+        message: 'Se detecta sismo fuerte con posible afectacion estructural en el Valle de Aburra.',
+        location: 'Medellin - Area Metropolitana',
+        source: 'SIATA / SGC',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Agachese, cubrase y sujetese durante el movimiento.',
+          'Alejese de ventanas, postes y fachadas.',
+          'Evacue solo cuando el movimiento haya terminado y sea seguro.'
+        ],
+        channels: [1, 2, 3, 4]
+      }
+    },
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000005',
+        eventType: 6,
+        riskLevel: 4,
+        title: 'Alerta critica por huracan',
+        message: 'Se proyectan vientos destructivos y lluvias extremas asociados a sistema ciclonico.',
+        location: 'Valle de Aburra',
+        source: 'SIATA / IDEAM',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Permanezca bajo techo y lejos de ventanas.',
+          'Asegure objetos que puedan ser arrastrados por el viento.',
+          'Siga las rutas de evacuacion si las autoridades lo ordenan.'
+        ],
+        channels: [1, 2, 3, 4]
+      }
+    },
+    {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: '00000000-0000-0000-0000-000000000006',
+        eventType: 4,
+        riskLevel: 1,
+        title: 'Boletin informativo de monitoreo',
+        message: 'Monitoreo preventivo activo. No se reportan emergencias criticas en este momento.',
+        location: 'Valle de Aburra',
+        source: 'SIATA',
+        createdAt: '2026-05-12T22:23:00',
+        expiresAt: '2026-05-13T02:23:00',
+        status: 'Active',
+        instructions: [
+          'Mantengase informado por canales oficiales.',
+          'Actualice sus preferencias de notificacion.'
+        ],
+        channels: [3]
+      }
+    }
   ];
 
-  constructor(private ngZone: NgZone) {}
-  /** Registro de ConcreteCreators — el cliente trabaja con el tipo abstracto Creator */
+  constructor(
+    private ngZone: NgZone,
+    private alertEventBus: RiskAlertEventBusService,
+    private alertPresentationResolver: AlertPresentationResolverService,
+    private alertPatternIntegration: AlertPatternIntegrationService
+  ) {}
+
+  /** Registro de ConcreteCreators: el cliente trabaja con el Creator abstracto. */
   private creators = new Map<string, NotificationChannelCreator>([
     ['sms', new SMSChannelCreator()],
     ['email', new EmailChannelCreator()],
     ['push', new PushChannelCreator()],
-    ['whatsapp', new WhatsAppChannelCreator()],
+    ['whatsapp', new WhatsAppChannelCreator()]
   ]);
 
   /**
-   * Envía una notificación a través de los canales especificados
-   * @param notification - Objeto de notificación con detalles
-   * @returns Array de respuestas de envío
+   * Envia una notificacion a traves de los canales especificados.
    */
   sendNotification(notification: Notification): NotificationResponse[] {
     const responses: NotificationResponse[] = [];
-
-    // Generar ID único para la notificación
     const notificationId = notification.id || `notif_${Date.now()}`;
 
-    // Iterar sobre los canales solicitados
     notification.channels.forEach(channelName => {
       try {
-        // Usar el ConcreteCreator para crear la instancia del canal
         const creator = this.creators.get(channelName);
         if (!creator) throw new Error(`Canal no soportado: ${channelName}`);
-        const channel = creator.createChannel();
 
-        // Enviar la notificación a través del canal
+        const channel = creator.createChannel();
         const response = this.sendViaChannel(
           channel,
           channelName,
@@ -108,7 +236,6 @@ export class NotificationService {
 
         responses.push(response);
       } catch (error) {
-        // Capturar errores si el canal no existe
         responses.push({
           success: false,
           channel: channelName,
@@ -118,7 +245,6 @@ export class NotificationService {
       }
     });
 
-    // Guardar en historial
     notification.timestamp = new Date();
     notification.status = responses.some(r => r.success) ? 'sent' : 'failed';
     this.notificationHistory.push(notification);
@@ -126,14 +252,6 @@ export class NotificationService {
     return responses;
   }
 
-  /**
-   * Envía la notificación a través de un canal específico
-   * @param channel - Instancia del canal
-   * @param channelName - Nombre del canal
-   * @param notification - Datos de la notificación
-   * @param notificationId - ID único de la notificación
-   * @returns Respuesta de envío
-   */
   private sendViaChannel(
     channel: NotificationChannel,
     channelName: string,
@@ -143,26 +261,22 @@ export class NotificationService {
     const message = `[${notification.title}] ${notification.message}`;
 
     try {
-      // Enviar a través del canal
       channel.send(message, notification.recipient);
 
-      // Crear respuesta exitosa
       const response: NotificationResponse = {
         success: true,
         channel: channel.name,
-        message: `✅ Notificación enviada por ${channel.name}`,
+        message: `Notificacion enviada por ${channel.name}`,
         timestamp: new Date()
       };
 
-      // Log en consola
       this.logNotification(response, notification, notificationId);
-
       return response;
     } catch (error) {
       const errorResponse: NotificationResponse = {
         success: false,
         channel: channel.name,
-        message: `❌ Error al enviar por ${channel.name}: ${error}`,
+        message: `Error al enviar por ${channel.name}: ${error}`,
         timestamp: new Date()
       };
 
@@ -171,9 +285,6 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Registra la notificación en la consola con formato
-   */
   private logNotification(
     response: NotificationResponse,
     notification: Notification,
@@ -186,33 +297,24 @@ export class NotificationService {
       title: notification.title,
       message: notification.message,
       recipient: notification.recipient,
-      status: 'SENT'
+      status: response.success ? 'SENT' : 'FAILED'
     };
 
-    console.group(`📤 ${response.channel} - Notificación Enviada`);
+    console.group(`${response.channel} - Notificacion enviada`);
     console.table(log);
     console.log('Detalles completos:', log);
     console.groupEnd();
   }
 
-  /**
-   * Obtiene el historial de notificaciones
-   */
   getNotificationHistory(): Notification[] {
     return [...this.notificationHistory];
   }
 
-  /**
-   * Limpia el historial de notificaciones
-   */
   clearHistory(): void {
     this.notificationHistory = [];
     console.log('Historial de notificaciones limpiado');
   }
 
-  /**
-   * Obtiene estadísticas de notificaciones
-   */
   getStatistics() {
     return {
       totalNotifications: this.notificationHistory.length,
@@ -226,9 +328,6 @@ export class NotificationService {
     };
   }
 
-  /**
-   * Agrupa las notificaciones por canal
-   */
   private getNotificationsByChannel() {
     const byChannel: { [key: string]: number } = {};
 
@@ -241,10 +340,6 @@ export class NotificationService {
     return byChannel;
   }
 
-  /**
-   * Envía una notificación simple a través de múltiples canales
-   * Método helper para casos de uso comunes
-   */
   sendSimple(
     title: string,
     message: string,
@@ -259,7 +354,13 @@ export class NotificationService {
     });
   }
 
-  startConnection() {
+  startConnection(): void {
+    if (this.simulationModeEnabled) {
+      console.log('Modo simulacion activo: se emitira una alerta cada 20 segundos.');
+      this.startSimulation();
+      return;
+    }
+
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:44357/notificationHub')
       .withAutomaticReconnect()
@@ -268,117 +369,210 @@ export class NotificationService {
     this.hubConnection
       .start()
       .then(() => {
-        console.log('SignalR conectado - Usando alertas del backend');
-        this.isBackendConnected = true;
+        console.log('SignalR conectado - usando alertas del backend');
         this.stopSimulation();
       })
       .catch(err => {
-        console.warn('Backend no disponible, activando modo simulación:', err.message);
-        this.isBackendConnected = false;
-        //this.startSimulation();
+        console.warn('Backend no disponible, activando modo simulacion:', err.message);
+        this.startSimulation();
       });
 
-    // Si se reconecta, detener simulación
     this.hubConnection.onreconnected(() => {
-      console.log('SignalR reconectado - Deteniendo simulación');
-      this.isBackendConnected = true;
+      console.log('SignalR reconectado - deteniendo simulacion');
       this.stopSimulation();
     });
 
-    // Si se desconecta, iniciar simulación
     this.hubConnection.onclose(() => {
-      console.warn('SignalR desconectado - Activando simulación');
-      this.isBackendConnected = false;
-      //this.startSimulation();
+      console.warn('SignalR desconectado - activando simulacion');
+      this.startSimulation();
     });
   }
 
-  stopConnection() {
+  stopConnection(): void {
     this.stopSimulation();
+    this.clearAutoRemoveTimeouts();
+    this.alertEventBus.clearAlerts();
+
     if (this.hubConnection) {
       this.hubConnection.stop()
         .then(() => console.log('SignalR desconectado'));
     }
   }
 
-  receiveNotifications() {
-    this.hubConnection.on('ReceiveNotification', (message: string) => {
-      window.alert("Has recibido una nueva alerta");
+  receiveNotifications(): void {
+    if (!this.hubConnection) {
+      console.info('SignalR no inicializado porque el frontend esta en modo simulacion.');
+      return;
+    }
+
+    this.hubConnection.on('ReceiveNotification', (payload: BackendRiskAlertNotification | string) => {
+      const backendAlert = this.normalizeBackendPayload(payload);
       const alert: RealTimeAlert = {
-        id: `alert_${Date.now()}`,
-        message,
-        timestamp: new Date(),
+        ...backendAlert,
+        receivedAt: new Date(),
         simulated: false
       };
+
       this.pushAlert(alert);
-      console.log('📡 Notificación del backend:', message);
+      console.log('Notificacion recibida desde backend:', alert);
     });
   }
 
-  /**
-   * Agrega una alerta al array y programa su auto-eliminación.
-   * Todo se ejecuta dentro de NgZone para forzar detección de cambios.
-   */
   private pushAlert(alert: RealTimeAlert): void {
     this.ngZone.run(() => {
-      const updated = [alert, ...this.alertsSubject.value];
-      this.alertsSubject.next(updated);
+      const presentation = this.alertPresentationResolver.resolve(alert);
+      console.log('[1/4 Strategy] Estrategia seleccionada para la alerta', {
+        alertId: alert.content.id,
+        eventType: alert.content.eventType,
+        strategyVisualClass: presentation.visualClass,
+        riskLabel: presentation.riskLabel,
+        priority: presentation.priority,
+        autoCloseMilliseconds: presentation.autoCloseMilliseconds
+      });
 
-      const duration = alert.simulated ? 10000 : 20000;
-      setTimeout(() => {
+      this.alertEventBus.publishAlert(alert);
+      console.log('[2/4 Observer] RiskAlertEventBusService notifico a los suscriptores', {
+        alertId: alert.content.id,
+        activeAlerts: this.alertEventBus.getSnapshot().length
+      });
+
+      const decorated = this.alertPatternIntegration.decorateAlert(presentation);
+      console.log('[3/4 Decorator] AlertMessageBuilder enriquecio el mensaje', {
+        alertId: alert.content.id,
+        decoratorAlertType: decorated.decoratorAlertType,
+        decoratorRiskLevel: decorated.decoratorRiskLevel,
+        strategyVisualClass: presentation.visualClass,
+        decoratedTitle: decorated.decoratedTitle,
+        metadata: decorated.decoratedMessageObject.getMetadata()
+      });
+
+      const notification: Notification = {
+        id: alert.content.id,
+        title: decorated.decoratedTitle,
+        message: decorated.decoratedMessage,
+        recipient: 'usuario-dashboard-simulado',
+        channels: decorated.factoryChannels
+      };
+
+      console.log('[4/4 Factory Method] Canales creados segun codigos de la alerta', {
+        alertId: alert.content.id,
+        channelCodes: alert.content.channels,
+        factoryChannels: notification.channels
+      });
+      this.sendNotification(notification);
+
+      const timeoutId = setTimeout(() => {
         this.ngZone.run(() => {
-          this.removeAlert(alert.id);
+          this.removeAlert(alert.content.id);
         });
-      }, duration);
+      }, presentation.autoCloseMilliseconds);
+
+      this.autoRemoveTimeouts.set(alert.content.id, timeoutId);
     });
   }
 
-  /**
-   * Elimina una alerta del array por ID
-   */
   removeAlert(alertId: string): void {
-    const updated = this.alertsSubject.value.filter(a => a.id !== alertId);
-    this.alertsSubject.next(updated);
+    const timeoutId = this.autoRemoveTimeouts.get(alertId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.autoRemoveTimeouts.delete(alertId);
+    }
+
+    this.alertEventBus.removeAlert(alertId);
   }
 
-  /**
-   * Inicia la simulación de alertas cada 20 segundos
-   */
   private startSimulation(): void {
-    if (this.simulationInterval) return; // Ya está corriendo
+    if (this.simulationInterval) return;
 
-    console.log('🔄 Simulación de alertas iniciada (cada 20s)');
-    // Emitir primera alerta inmediatamente
+    console.log('Simulacion de alertas iniciada: intervalo 20s. Auto-close definido por Strategy: 5s para naranja/gris y 40s para criticas.');
     this.emitSimulatedAlert();
 
     this.simulationInterval = setInterval(() => {
       this.emitSimulatedAlert();
-    }, 20000);
+    }, ALERT_SIMULATION_INTERVAL_MILLISECONDS);
   }
 
-  /**
-   * Detiene la simulación de alertas
-   */
   private stopSimulation(): void {
     if (this.simulationInterval) {
       clearInterval(this.simulationInterval);
       this.simulationInterval = null;
-      console.log('🔄 Simulación de alertas detenida');
+      console.log('Simulacion de alertas detenida');
     }
   }
 
-  /**
-   * Emite una alerta simulada aleatoria
-   */
   private emitSimulatedAlert(): void {
-    const randomIndex = Math.floor(Math.random() * this.simulatedMessages.length);
-    const alert: RealTimeAlert = {
-      id: `sim_${Date.now()}`,
-      message: this.simulatedMessages[randomIndex],
-      timestamp: new Date(),
+    const template = this.simulatedBackendAlerts[
+      this.simulationIndex % this.simulatedBackendAlerts.length
+    ];
+    this.simulationIndex += 1;
+
+    const alert = this.createRealTimeAlertFromTemplate(template);
+    this.pushAlert(alert);
+
+    console.log('Alerta simulada con estructura de backend:', alert);
+  }
+
+  private createRealTimeAlertFromTemplate(template: BackendRiskAlertNotification): RealTimeAlert {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
+
+    return {
+      title: template.title,
+      content: {
+        ...template.content,
+        id: this.createAlertId(),
+        createdAt: now.toISOString(),
+        expiresAt: expiresAt.toISOString()
+      },
+      receivedAt: now,
       simulated: true
     };
-    this.pushAlert(alert);
-    console.log('🧪 Alerta simulada:', alert.message);
+  }
+
+  private normalizeBackendPayload(payload: BackendRiskAlertNotification | string): BackendRiskAlertNotification {
+    if (typeof payload !== 'string') {
+      return payload;
+    }
+
+    try {
+      const parsed = JSON.parse(payload) as BackendRiskAlertNotification;
+      if (parsed?.content?.id) {
+        return parsed;
+      }
+    } catch {
+      // Si el backend legacy envia solo texto, se adapta al contrato nuevo.
+    }
+
+    const now = new Date();
+    return {
+      title: 'Nueva alerta de riesgo',
+      content: {
+        id: this.createAlertId(),
+        eventType: 4,
+        riskLevel: 2,
+        title: 'Alerta informativa',
+        message: payload,
+        location: 'Valle de Aburra',
+        source: 'Backend',
+        createdAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
+        status: 'Active',
+        instructions: ['Revise la informacion y mantengase atento a nuevas actualizaciones.'],
+        channels: [3]
+      }
+    };
+  }
+
+  private createAlertId(): string {
+    if (globalThis.crypto?.randomUUID) {
+      return globalThis.crypto.randomUUID();
+    }
+
+    return `sim-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  private clearAutoRemoveTimeouts(): void {
+    this.autoRemoveTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    this.autoRemoveTimeouts.clear();
   }
 }

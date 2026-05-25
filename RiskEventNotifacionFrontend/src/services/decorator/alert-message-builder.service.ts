@@ -87,6 +87,77 @@ export class AlertMessageBuilderService {
     return message;
   }
 
+
+
+  /**
+   * Construye una alerta critica por terremoto.
+   * Mantiene el mismo color semantico que Strategy: ROJO.
+   */
+  buildEarthquakeAlert(): AlertMessage {
+    let message: AlertMessage = new BaseAlertMessage(
+      'Alerta critica por terremoto',
+      'Se detecta sismo fuerte con posible afectacion estructural en el Valle de Aburra.'
+    );
+
+    message = new RiskLevelAlertDecorator(message, 'ROJO');
+    message = new LocationAlertDecorator(message, ['Medellin', 'Area Metropolitana']);
+    message = new SafetyRecommendationAlertDecorator(
+      message,
+      'Agachese, cubrase y sujetese. Alejese de ventanas y evacue solo cuando sea seguro.'
+    );
+    message = new PriorityAlertDecorator(message, 'Alta');
+    message = new TimestampAlertDecorator(message, new Date());
+    message = new PlainLanguageAlertDecorator(message);
+
+    return message;
+  }
+
+  /**
+   * Construye una alerta critica por huracan.
+   * Mantiene el mismo color semantico que Strategy: ROJO.
+   */
+  buildHurricaneAlert(): AlertMessage {
+    let message: AlertMessage = new BaseAlertMessage(
+      'Alerta critica por huracan',
+      'Se proyectan vientos destructivos y lluvias extremas asociados a sistema ciclonico.'
+    );
+
+    message = new RiskLevelAlertDecorator(message, 'ROJO');
+    message = new LocationAlertDecorator(message, ['Valle de Aburra']);
+    message = new SafetyRecommendationAlertDecorator(
+      message,
+      'Permanezca bajo techo, alejese de ventanas y siga instrucciones oficiales de evacuacion.'
+    );
+    message = new PriorityAlertDecorator(message, 'Alta');
+    message = new TimestampAlertDecorator(message, new Date());
+    message = new PlainLanguageAlertDecorator(message);
+
+    return message;
+  }
+
+  /**
+   * Construye una alerta generica o informativa.
+   * Mantiene el mismo color semantico que Strategy: GRIS.
+   */
+  buildGenericInfoAlert(): AlertMessage {
+    let message: AlertMessage = new BaseAlertMessage(
+      'Boletin informativo de monitoreo',
+      'Monitoreo preventivo activo. No se reportan emergencias criticas en este momento.'
+    );
+
+    message = new RiskLevelAlertDecorator(message, 'GRIS');
+    message = new LocationAlertDecorator(message, ['Valle de Aburra']);
+    message = new SafetyRecommendationAlertDecorator(
+      message,
+      'Revise la informacion y mantengase atento a nuevas actualizaciones oficiales.'
+    );
+    message = new PriorityAlertDecorator(message, 'Baja');
+    message = new TimestampAlertDecorator(message, new Date());
+    message = new PlainLanguageAlertDecorator(message);
+
+    return message;
+  }
+
   /**
    * Constructor flexible que permite crear una alerta con decoradores selectivos
    * @param title - Título base del mensaje

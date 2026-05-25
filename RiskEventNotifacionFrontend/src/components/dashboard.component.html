@@ -63,76 +63,107 @@
 
     <!-- Content Area -->
     <section class="content-area p-4">
-      <!-- Alert Banner -->
-      <div class="alert alert-warning alert-dismissible fade show" role="alert" style="background-color: #fff3cd; border-left: 5px solid #ff6b35;">
-        <div class="d-flex align-items-center">
-          <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem; color: #ff6b35;"></i>
-          <div>
-            <strong>ALERTA NARANJA</strong>
-            <p class="mb-0 text-muted">Se prevén lluvias intensas durante las próximas horas en el Valle de Aburrá. Posibilidad de crecientes súbitas en quebradas e inundaciones urbanas.</p>
+      <ng-container *ngIf="currentAlertView$ | async as currentAlertView; else noActiveBanner">
+        <!-- Alert Banner sincronizado con Strategy + Decorator -->
+        <div class="alert alert-dismissible fade show risk-banner" [ngClass]="currentAlertView.visualClass" role="alert">
+          <div class="d-flex align-items-center">
+            <i [ngClass]="[currentAlertView.iconClass, 'me-3', 'risk-banner-icon']"></i>
+            <div>
+              <strong>ALERTA {{ getRiskShortLabel(currentAlertView) }}</strong>
+              <p class="mb-0 text-muted">{{ currentAlertView.decoratedTitle || currentAlertView.title }}</p>
+              <p class="mb-0 small text-muted">{{ currentAlertView.message }}</p>
+            </div>
           </div>
+          <button type="button" class="btn-close" (click)="removeAlert(currentAlertView.alertId)"></button>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
 
-      <!-- Stats Cards -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-top: 5px solid #ff6b35;">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <p class="text-muted mb-0 small">Nivel de Riesgo</p>
-                  <h3 class="mb-0" style="color: #ff6b35;">NARANJA</h3>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm risk-status-card" [ngClass]="currentAlertView.visualClass">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p class="text-muted mb-0 small">Nivel de Riesgo</p>
+                    <h3 class="mb-0 risk-status-text" [ngClass]="currentAlertView.visualClass">{{ getRiskShortLabel(currentAlertView) }}</h3>
+                  </div>
+                  <i [ngClass]="[currentAlertView.iconClass, 'risk-status-icon', currentAlertView.visualClass]"></i>
                 </div>
-                <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #ff6b35; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm" style="border-top: 5px solid #1a3a52;">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p class="text-muted mb-0 small">Ubicación Afectada</p>
+                    <h6 class="mb-0">{{ currentAlertView.location }}</h6>
+                  </div>
+                  <i class="bi bi-map" style="font-size: 2rem; color: #1a3a52; opacity: 0.3;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm" style="border-top: 5px solid #0066cc;">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p class="text-muted mb-0 small">Duración visible</p>
+                    <h3 class="mb-0">{{ getAutoCloseSeconds(currentAlertView) }}s</h3>
+                  </div>
+                  <i class="bi bi-hourglass-split" style="font-size: 2rem; color: #0066cc; opacity: 0.3;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm" style="border-top: 5px solid #28a745;">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p class="text-muted mb-0 small">Última Actualización</p>
+                    <h6 class="mb-0">{{ currentAlertView.receivedAt | date:'dd MMM, HH:mm' }}</h6>
+                  </div>
+                  <i class="bi bi-clock" style="font-size: 2rem; color: #28a745; opacity: 0.3;"></i>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </ng-container>
 
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-top: 5px solid #1a3a52;">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <p class="text-muted mb-0 small">Municipios Afectados</p>
-                  <h3 class="mb-0">5</h3>
-                </div>
-                <i class="bi bi-map" style="font-size: 2rem; color: #1a3a52; opacity: 0.3;"></i>
-              </div>
+      <ng-template #noActiveBanner>
+        <div class="alert alert-light simulation-note mb-4" role="alert">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-broadcast-pin me-2"></i>
+            <div>
+              <strong>Esperando alertas simuladas</strong>
+              <p class="mb-0 small text-muted">El frontend emitirá una alerta simulada cada 20 segundos con la misma estructura definida para el backend.</p>
             </div>
           </div>
         </div>
 
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-top: 5px solid #0066cc;">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <p class="text-muted mb-0 small">Probabilidad de Lluvia</p>
-                  <h3 class="mb-0">80%</h3>
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card border-0 shadow-sm risk-status-card risk-generic">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div>
+                    <p class="text-muted mb-0 small">Nivel de Riesgo</p>
+                    <h3 class="mb-0 risk-status-text risk-generic">SIN ALERTA</h3>
+                  </div>
+                  <i class="bi bi-bell-slash risk-status-icon"></i>
                 </div>
-                <i class="bi bi-cloud-rain" style="font-size: 2rem; color: #0066cc; opacity: 0.3;"></i>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-top: 5px solid #28a745;">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <p class="text-muted mb-0 small">Última Actualización</p>
-                  <h6 class="mb-0">23 may, 09:25</h6>
-                </div>
-                <i class="bi bi-clock" style="font-size: 2rem; color: #28a745; opacity: 0.3;"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </ng-template>
 
       <!-- Main Content Grid -->
       <div class="row g-4">
@@ -145,38 +176,70 @@
               </h5>
             </div>
             <div class="card-body">
-              <!-- Botones para enviar alertas de prueba (Patrón Decorator) -->
-              <div class="alert alert-info mb-4" style="background-color: #e7f3ff; border-color: #0066cc;">
-                <h6 class="mb-2"><i class="bi bi-info-circle"></i> Demo: Patrón Decorator</h6>
-                <p class="text-muted small mb-3">Haz clic en los botones para enviar alertas enriquecidas progresivamente:</p>
-                <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-sm btn-warning" (click)="sendCriticalRainAlert()" title="Enviar alerta de lluvia intensa">
-                    <i class="bi bi-cloud-rain"></i> Lluvia Intensa
-                  </button>
-                  <button class="btn btn-sm btn-danger" (click)="sendLandslideAlert()" title="Enviar alerta de deslizamiento">
-                    <i class="bi bi-exclamation-octagon"></i> Deslizamiento
-                  </button>
-                  <button class="btn btn-sm btn-primary" (click)="sendFloodAlert()" title="Enviar alerta de inundación">
-                    <i class="bi bi-water"></i> Inundación
-                  </button>
+              <div class="alert alert-light mb-4 simulation-note" role="alert">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-diagram-3 me-2"></i>
+                  <div>
+                    <strong>Flujo sincronizado de patrones</strong>
+                    <p class="mb-0 small text-muted">
+                      Backend simulado → Strategy clasifica tipo/color/tiempo → Observer notifica → Decorator enriquece la misma alerta → Factory Method crea los canales definidos en <code>content.channels</code>.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <ng-container *ngIf="realTimeAlerts$ | async as alerts">
-                <div class="timeline" *ngIf="alerts.length > 0; else noAlerts">
-                  <div *ngFor="let alert of alerts" class="timeline-item mb-3 pb-3 border-bottom">
+              <ng-container *ngIf="alertViewModels$ | async as alertViews">
+                <div class="timeline" *ngIf="alertViews.length > 0; else noAlerts">
+                  <div *ngFor="let view of alertViews" class="timeline-item alert-view-card mb-3 pb-3 border-bottom" [ngClass]="view.visualClass">
                     <div class="d-flex">
-                      <div class="timeline-marker" style="width: 30px; height: 30px; background-color: #ff6b35; border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="bi bi-bell-fill text-white" style="font-size: 0.8rem;"></i>
+                      <div class="timeline-marker" [ngClass]="view.visualClass">
+                        <i [class]="view.iconClass" style="font-size: 0.9rem;"></i>
                       </div>
                       <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start">
-                          <h6 class="mb-1">{{ alert.message }}</h6>
-                          <button class="btn btn-sm btn-link text-muted p-0" (click)="removeAlert(alert.id)" title="Descartar">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                          <div class="w-100">
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                              <h6 class="mb-0">{{ view.decoratedTitle || view.title }}</h6>
+                              <span class="badge" [ngClass]="view.visualClass">Strategy: {{ view.riskLabel }}</span>
+                              <span class="badge decorator-badge" [ngClass]="view.visualClass" *ngIf="view.decoratorRiskLevel">Decorator: {{ view.decoratorAlertType }} / {{ view.decoratorRiskLevel }}</span>
+                              <span class="badge text-bg-light" *ngIf="view.simulated">simulada</span>
+                            </div>
+
+                            <p class="mb-1">{{ view.message }}</p>
+
+                            <div class="alert-meta small text-muted mb-2">
+                              <span><i class="bi bi-geo-alt me-1"></i>{{ view.location }}</span>
+                              <span><i class="bi bi-broadcast me-1"></i>{{ view.source }}</span>
+                              <span><i class="bi bi-hdd-network me-1"></i>{{ view.simulated ? 'Simulada backend' : 'Backend' }}</span>
+                              <span><i class="bi bi-clock-history me-1"></i>{{ getAutoCloseSeconds(view) }}s visibles</span>
+                              <span *ngIf="view.factoryChannels?.length"><i class="bi bi-send-check me-1"></i>Factory: {{ view.factoryChannels?.join(', ') }}</span>
+                            </div>
+
+                            <p class="small mb-1 text-muted">
+                              <i class="bi bi-shield-check me-1"></i>{{ view.recommendation }}
+                            </p>
+
+                            <ul class="instruction-list small mb-2" *ngIf="view.instructions.length > 0">
+                              <li *ngFor="let instruction of view.instructions">{{ instruction }}</li>
+                            </ul>
+
+                            <!-- <div class="decorator-preview small mb-2" [ngClass]="view.visualClass" *ngIf="view.decoratedMessage">
+                              <div class="fw-semibold mb-1">Mensaje enriquecido por Decorator, sincronizado con esta alerta:</div>
+                              <div>{{ view.decoratedMessage }}</div>
+                            </div> -->
+
+                            <p class="text-muted small mb-0">
+                              Recibida: {{ view.receivedAt | date:'hh:mm:ss a' }}
+                              <span class="ms-2">Expira: {{ view.expiresAt | date:'shortTime' }}</span>
+                              <span *ngIf="view.requiresImmediateAction" class="ms-2 fw-semibold text-danger">
+                                Requiere atención inmediata
+                              </span>
+                            </p>
+                          </div>
+                          <button class="btn btn-sm btn-link text-muted p-0" (click)="removeAlert(view.alertId)" title="Descartar">
                             <i class="bi bi-x-lg"></i>
                           </button>
                         </div>
-                        <p class="text-muted small mb-0">{{ alert.timestamp | date:'hh:mm:ss a' }}</p>
                       </div>
                     </div>
                   </div>
@@ -201,71 +264,41 @@
               </h5>
             </div>
             <div class="card-body">
-              <p class="text-muted small mb-4">Elige cómo quieres recibir nuestras alertas:</p>
+              <p class="text-muted small mb-4">Canales recibidos desde <code>content.channels</code> de la alerta activa simulada.</p>
 
-              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-phone-fill" style="font-size: 1.5rem; color: #0066cc; margin-right: 10px;"></i>
-                  <div>
-                    <h6 class="mb-0">App Alerta Valle</h6>
-                    <small [class]="channelPreferences.push ? 'text-success' : 'text-muted'">
-                      {{ channelPreferences.push ? 'Activo' : 'Inactivo' }}
-                    </small>
+              <ng-container *ngIf="currentAlertView$ | async as channelAlert; else noChannelAlert">
+                <div class="backend-alert-summary mb-3" [ngClass]="channelAlert.visualClass">
+                  <div class="fw-semibold">{{ channelAlert.title }}</div>
+                  <div class="small text-muted">Códigos backend: {{ channelAlert.channels.join(', ') }}</div>
+                  <div class="small text-muted" *ngIf="channelAlert.factoryChannels?.length">Factory Method: {{ channelAlert.factoryChannels?.join(', ') }}</div>
+                </div>
+
+                <div
+                  *ngFor="let channel of backendChannelOptions"
+                  class="channel-item d-flex align-items-center justify-content-between mb-3 p-3"
+                  [class.channel-active]="isBackendChannelActive(channelAlert, channel.code)"
+                  [class.channel-inactive]="!isBackendChannelActive(channelAlert, channel.code)">
+                  <div class="d-flex align-items-center">
+                    <i [class]="channel.iconClass" [style.color]="channel.iconColor" style="font-size: 1.5rem; margin-right: 10px;"></i>
+                    <div>
+                      <h6 class="mb-0">{{ channel.label }}</h6>
+                      <small [class]="isBackendChannelActive(channelAlert, channel.code) ? 'text-success' : 'text-muted'">
+                        {{ getChannelStatus(channelAlert, channel.code) }}
+                      </small>
+                    </div>
+                  </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" [checked]="isBackendChannelActive(channelAlert, channel.code)" disabled>
                   </div>
                 </div>
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.push" (change)="toggleChannel('push')" [disabled]="!preferencesLoaded">
-                </div>
-              </div>
+              </ng-container>
 
-              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-chat-left-dots-fill" style="font-size: 1.5rem; color: #25d366; margin-right: 10px;"></i>
-                  <div>
-                    <h6 class="mb-0">SMS</h6>
-                    <small [class]="channelPreferences.sms ? 'text-success' : 'text-muted'">
-                      {{ channelPreferences.sms ? 'Activo' : 'Inactivo' }}
-                    </small>
-                  </div>
+              <ng-template #noChannelAlert>
+                <div class="text-center text-muted py-4">
+                  <i class="bi bi-send-slash" style="font-size: 2rem;"></i>
+                  <p class="mt-2 mb-0 small">Cuando llegue una alerta, aquí se activarán exactamente los canales enviados por el backend.</p>
                 </div>
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.sms" (change)="toggleChannel('sms')" [disabled]="!preferencesLoaded">
-                </div>
-              </div>
-
-              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-envelope-fill" style="font-size: 1.5rem; color: #ea4335; margin-right: 10px;"></i>
-                  <div>
-                    <h6 class="mb-0">Correo Electrónico</h6>
-                    <small [class]="channelPreferences.email ? 'text-success' : 'text-muted'">
-                      {{ channelPreferences.email ? 'Activo' : 'Inactivo' }}
-                    </small>
-                  </div>
-                </div>
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.email" (change)="toggleChannel('email')" [disabled]="!preferencesLoaded">
-                </div>
-              </div>
-
-              <div class="channel-item d-flex align-items-center justify-content-between mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-chat-bubble-fill" style="font-size: 1.5rem; color: #0a7e5c; margin-right: 10px;"></i>
-                  <div>
-                    <h6 class="mb-0">WhatsApp</h6>
-                    <small [class]="channelPreferences.whatsapp ? 'text-success' : 'text-muted'">
-                      {{ channelPreferences.whatsapp ? 'Activo' : 'Inactivo' }}
-                    </small>
-                  </div>
-                </div>
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" [checked]="channelPreferences.whatsapp" (change)="toggleChannel('whatsapp')" [disabled]="!preferencesLoaded">
-                </div>
-              </div>
-
-              <button class="btn btn-sm w-100" style="background-color: #ff6b35; color: white; border: none;" (click)="savePreferences()">
-                <i class="bi bi-save"></i> Guardar preferencias
-              </button>
+              </ng-template>
             </div>
           </div>
         </div>

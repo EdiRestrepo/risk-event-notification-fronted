@@ -1,10 +1,19 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Observable } from 'rxjs';
-import { timeout } from 'rxjs/operators';
+import { map, shareReplay, timeout } from 'rxjs/operators';
 import { AlertCenterFacadeService } from '../services/facade/alert-center.facade';
-import { RealTimeAlert } from '../services/notification.service';
+import type { RealTimeAlert } from '../services/models/risk-alert.model';
+import { AlertPresentationViewModel } from '../services/behavioral/strategy/alert-presentation-strategy.interface';
+
+interface BackendChannelView {
+  code: number;
+  key: 'sms' | 'email' | 'push' | 'whatsapp';
+  label: string;
+  iconClass: string;
+  iconColor: string;
+}
 
 /**
  * DashboardComponent
@@ -12,16 +21,14 @@ import { RealTimeAlert } from '../services/notification.service';
  * Componente principal que muestra el dashboard de alertas.
  *
  * PATRÓN FACADE:
- * - Depende ÚNICAMENTE de AlertCenterFacadeService (punto único de acceso)
- * - El Facade orquesta: NotificationService, UserPreferencesService, AuthService, AlertMessageBuilderService
- * - El componente NO conoce directamente los servicios internos
+ * - Depende únicamente de AlertCenterFacadeService.
+ * - El Facade orquesta NotificationService, UserPreferencesService,
+ *   AlertMessageBuilderService y las adaptaciones de patrones.
  *
- * Responsabilidades del componente:
- * - Renderizar la interfaz gráfica (SIN CAMBIOS)
- * - Manejar eventos de usuario
- * - Delegardelegación en el Facade
- *
- * La lógica de alertas, preferencias y envío permanece INTACTA
+ * PATRONES DE COMPORTAMIENTO EN LA VISTA:
+ * - Observer: el componente se actualiza por observables del EventBus.
+ * - Strategy: recibe un ViewModel ya clasificado por tipo de riesgo.
+ * - Decorator: muestra el mensaje enriquecido de la misma alerta activa.
  */
 @Component({
   selector: 'app-dashboard',
@@ -35,19 +42,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isSidebarVisible: boolean = true;
   userName: string = 'Usuario SIATA';
 
-  /** Observable de alertas activas (se usa con async pipe en la vista) */
+  /** Observable de alertas activas (se usa con async pipe en la vista). */
   realTimeAlerts$: Observable<RealTimeAlert[]>;
 
-  /** Flag para saber si las preferencias ya se cargaron del backend */
-  preferencesLoaded = true; // Inicializar como true para permitir interacción inmediata
+  /** Alertas transformadas por Strategy y enriquecidas por Decorator. */
+  alertViewModels$: Observable<AlertPresentationViewModel[]>;
 
-  // Estado de los canales de notificación (mantiene la interfaz gráfica sin cambios)
+  /** Última alerta activa; sincroniza banner, tarjetas y canales del backend. */
+  currentAlertView$: Observable<AlertPresentationViewModel | null>;
+
+  /** Flag para saber si las preferencias ya se cargaron del backend. */
+  preferencesLoaded = true;
+
+  /** Estado visual heredado de preferencias de usuario. Se mantiene para no romper la fachada existente. */
   channelPreferences: { sms: boolean; email: boolean; push: boolean; whatsapp: boolean } = {
     sms: false,
     email: false,
     push: false,
     whatsapp: false
   };
+
+  /** Códigos que llegan desde backend: 1 SMS, 2 Email, 3 Push/App, 4 WhatsApp. */
+  readonly backendChannelOptions: BackendChannelView[] = [
+    { code: 3, key: 'push', label: 'App Alerta Valle', iconClass: 'bi bi-phone-fill', iconColor: '#0066cc' },
+    { code: 1, key: 'sms', label: 'SMS', iconClass: 'bi bi-chat-left-dots-fill', iconColor: '#25d366' },
+    { code: 2, key: 'email', label: 'Correo Electrónico', iconClass: 'bi bi-envelope-fill', iconColor: '#ea4335' },
+    { code: 4, key: 'whatsapp', label: 'WhatsApp', iconClass: 'bi bi-chat-bubble-fill', iconColor: '#0a7e5c' }
+  ];
 
   menuOptions = [
     { label: 'Mapa de Riesgo', icon: 'map', path: '/dashboard/mapa' },
@@ -61,8 +82,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private facade: AlertCenterFacadeService,
     private cdr: ChangeDetectorRef
   ) {
-    // Obtener observable de alertas desde el Facade
     this.realTimeAlerts$ = this.facade.alerts$;
+    this.alertViewModels$ = this.facade.alertViewModels$.pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+    this.currentAlertView$ = this.alertViewModels$.pipe(
+      map(alertViews => alertViews.length > 0 ? alertViews[0] : null)
+    );
   }
 
   ngOnInit(): void {
@@ -72,26 +98,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Obtener el nombre del usuario de localStorage
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
       try {
         const user = JSON.parse(currentUser);
         this.userName = user.name || user.userName || 'Usuario SIATA';
 
-        // Inicializar el centro de alertas a través del Facade
         const userId = user.userName || user.name || user.id;
         console.log('Usuario completo desde localStorage:', user);
         console.log('Llamando al Facade con userId:', userId);
 
-        // El Facade maneja:
-        // - Cargar preferencias del usuario
-        // - Iniciar conexión SignalR
-        // - Configurar los canales activos
         this.facade.initializeAlertCenter(userId);
 
-        // Cargar preferencias para actualizar el estado local visual
-        // Permitir que la UI sea interactiva mientras se cargan las preferencias
         this.facade.savePreferences().pipe(
           timeout(8000)
         ).subscribe({
@@ -102,7 +120,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Error al cargar preferencias:', err);
-            // Las preferencias siguen siendo accesibles incluso si hay error
           }
         });
       } catch (e) {
@@ -113,7 +130,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // El Facade maneja la limpieza (stopConnection)
+    // La fachada detiene la conexión cuando se cierra sesión.
   }
 
   removeAlert(alertId: string): void {
@@ -121,10 +138,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   toggleChannel(channel: 'sms' | 'email' | 'push' | 'whatsapp'): void {
-    // Actualizar estado local (para la UI)
     this.channelPreferences[channel] = !this.channelPreferences[channel];
-
-    // Delegar en el Facade (que a su vez delega en UserPreferencesService)
     this.facade.toggleChannel(channel);
   }
 
@@ -132,7 +146,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.facade.savePreferences().subscribe({
       next: (response) => {
         console.log('Preferencias guardadas:', response.message);
-        // Actualizar la vista con lo que devolvió el backend
         if (response.channels) {
           this.updateChannelPreferencesFromResponse(response);
         }
@@ -143,28 +156,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleSidebar() {
+  toggleSidebar(): void {
     this.isSidebarVisible = !this.isSidebarVisible;
   }
 
-  /**
-   * Envía una alerta de lluvia intensa
-   * El Facade orquesta: AlertMessageBuilderService (Decorator) → NotificationService (Factory Method)
-   */
   sendCriticalRainAlert(): void {
     this.facade.sendCriticalRainAlert();
   }
 
-  /**
-   * Envía una alerta de riesgo de deslizamiento
-   */
   sendLandslideAlert(): void {
     this.facade.sendLandslideAlert();
   }
 
-  /**
-   * Envía una alerta de inundación
-   */
   sendFloodAlert(): void {
     this.facade.sendFloodAlert();
   }
@@ -174,9 +177,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  /**
-   * Actualiza el estado local visual de las preferencias desde la respuesta del backend
-   */
+  isBackendChannelActive(view: AlertPresentationViewModel | null, code: number): boolean {
+    return Boolean(view?.channels?.includes(code));
+  }
+
+  getChannelStatus(view: AlertPresentationViewModel | null, code: number): string {
+    return this.isBackendChannelActive(view, code) ? 'Activo por backend' : 'No incluido';
+  }
+
+  getRiskShortLabel(view: AlertPresentationViewModel | null): string {
+    if (!view) return 'SIN ALERTA';
+    return view.decoratorRiskLevel || view.riskLabel.split('-')[0].trim();
+  }
+
+  getAutoCloseSeconds(view: AlertPresentationViewModel | null): number {
+    return view ? Math.round(view.autoCloseMilliseconds / 1000) : 0;
+  }
+
   private updateChannelPreferencesFromResponse(response: any): void {
     if (response.channels) {
       this.channelPreferences = {
