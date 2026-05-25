@@ -1,0 +1,202 @@
+<mxfile host="65bd71144e">
+    <diagram name="UML Strategy Alert Presentation" id="0">
+        <mxGraphModel dx="1611" dy="810" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1300" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="patternLabel" value="Patrón de comportamiento: Strategy" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="30" width="500" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dashboard" value="&lt;b&gt;DashboardComponent&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CLIENT)&lt;/i&gt;&lt;hr&gt;- facade: AlertCenterFacadeService&lt;br&gt;- alertViewModels$: Observable&amp;lt;AlertPresentationViewModel[]&amp;gt;&lt;br&gt;- currentAlertView$: Observable&amp;lt;AlertPresentationViewModel | null&amp;gt;&lt;hr&gt;+ ngOnInit(): void&lt;br&gt;+ removeAlert(alertId): void&lt;br&gt;+ getRiskShortLabel(view): string&lt;br&gt;+ getAutoCloseSeconds(view): number" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="160" width="470" height="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="facade" value="&lt;b&gt;AlertCenterFacadeService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CLIENT / ORQUESTADOR)&lt;/i&gt;&lt;hr&gt;- alertPresentationResolver: AlertPresentationResolverService&lt;br&gt;- alertPatternIntegration: AlertPatternIntegrationService&lt;hr&gt;+ get alertViewModels$(): Observable&amp;lt;AlertPresentationViewModel[]&amp;gt;&lt;br&gt;+ removeAlert(alertId): void" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#dae8fc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="460" width="470" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="resolver" value="&lt;b&gt;AlertPresentationResolverService&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONTEXT)&lt;/i&gt;&lt;hr&gt;- strategies: AlertPresentationStrategy[]&lt;hr&gt;+ resolve(alert: RealTimeAlert): AlertPresentationViewModel&lt;br&gt;+ resolveMany(alerts: RealTimeAlert[]): AlertPresentationViewModel[]" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#fff2cc;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="230" width="560" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="strategyInterface" value="&lt;i&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;AlertPresentationStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#e1d5e7;fontSize=13;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1420" y="220" width="490" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="viewModel" value="&lt;i&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;AlertPresentationViewModel&lt;/b&gt;&lt;br&gt;&lt;i&gt;(DATA CONTRACT)&lt;/i&gt;&lt;hr&gt;+ alert: RealTimeAlert&lt;br&gt;+ alertId: string&lt;br&gt;+ title: string&lt;br&gt;+ message: string&lt;br&gt;+ location: string&lt;br&gt;+ source: string&lt;br&gt;+ receivedAt: Date&lt;br&gt;+ createdAt: string&lt;br&gt;+ expiresAt: string&lt;br&gt;+ instructions: string[]&lt;br&gt;+ channels: number[]&lt;br&gt;+ riskLabel: string&lt;br&gt;+ iconClass: string&lt;br&gt;+ visualClass: string&lt;br&gt;+ recommendation: string&lt;br&gt;+ priority: AlertPriority&lt;br&gt;+ requiresImmediateAction: boolean&lt;br&gt;+ autoCloseMilliseconds: number&lt;br&gt;+ simulated: boolean&lt;br&gt;+ decoratedTitle?: string&lt;br&gt;+ decoratedMessage?: string&lt;br&gt;+ decoratorRiskLevel?: string&lt;br&gt;+ decoratorAlertType?: string&lt;br&gt;+ factoryChannels?: string[]&lt;hr&gt;&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#d5e8d4;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1880" y="400" width="520" height="500" as="geometry"/>
+                </mxCell>
+                <mxCell id="keywordsUtil" value="&lt;i&gt;&amp;lt;&amp;lt;utility&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;AlertKeywordsUtil&lt;/b&gt;&lt;br&gt;&lt;i&gt;(UTILITY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ normalizedAlertText(alert): string&lt;br&gt;+ messageContains(alert, keywords): boolean&lt;br&gt;+ riskLabelFromLevel(riskLevel): string&lt;br&gt;+ priorityFromRiskLevel(riskLevel): AlertPriority&lt;br&gt;+ requiresImmediateAction(riskLevel): boolean&lt;br&gt;+ baseViewModelFields(alert)" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f5f5f5;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="780" width="470" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="defaultStrategy" value="&lt;b&gt;DefaultRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="780" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="floodStrategy" value="&lt;b&gt;FloodRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1140" y="780" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="rainStrategy" value="&lt;b&gt;RainRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1490" y="780" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="landslideStrategy" value="&lt;b&gt;LandslideRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="1020" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="earthquakeStrategy" value="&lt;b&gt;EarthquakeRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1140" y="1020" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="hurricaneStrategy" value="&lt;b&gt;HurricaneRiskAlertStrategy&lt;/b&gt;&lt;br&gt;&lt;i&gt;(CONCRETE STRATEGY)&lt;/i&gt;&lt;hr&gt;&amp;nbsp;&lt;hr&gt;+ canHandle(alert: RealTimeAlert): boolean&lt;br&gt;+ buildViewModel(alert: RealTimeAlert): AlertPresentationViewModel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#333333;fillColor=#f8cecc;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="1490" y="1020" width="320" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="strategyNote" value="El Context mantiene una colección de estrategias y selecciona la primera que puede manejar la alerta recibida." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="110" width="560" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="clientNote" value="El componente no decide reglas de presentación: consume ViewModels ya clasificados por Strategy." style="shape=note;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#eeeeee;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="670" width="470" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="eDashboardFacade" value="usa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="dashboard" target="facade" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eFacadeResolver" value="solicita ViewModels" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=1;" parent="1" source="facade" target="resolver" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="570" y="555"/>
+                            <mxPoint x="570" y="320"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eResolverStrategy" value="strategies[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;startArrow=diamondThin;startFill=0;endArrow=open;endFill=0;" parent="1" source="resolver" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1400" y="310"/>
+                            <mxPoint x="1400" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eResolverViewModel" value="retorna" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=12;endArrow=open;dashed=1;" parent="1" source="resolver" target="viewModel" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1300" y="320"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eStrategyViewModel" value="buildViewModel()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=12;endArrow=open;dashed=1;" parent="1" source="strategyInterface" target="viewModel" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1665" y="650"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edefaultStrategyImpl" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="defaultStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="860"/>
+                            <mxPoint x="770" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="efloodStrategyImpl" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="floodStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1120" y="860"/>
+                            <mxPoint x="1120" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="erainStrategyImpl" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="rainStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1470" y="860"/>
+                            <mxPoint x="1470" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="elandslideStrategyImpl" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="landslideStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="1100"/>
+                            <mxPoint x="770" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eearthquakeStrategyImpl" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="earthquakeStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1120" y="1100"/>
+                            <mxPoint x="1120" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ehurricaneStrategyImpl" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontSize=12;endArrow=block;endFill=0;dashed=1;" parent="1" source="hurricaneStrategy" target="strategyInterface" edge="1">
+                    <mxGeometry x="0.0002" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1470" y="1100"/>
+                            <mxPoint x="1470" y="720"/>
+                            <mxPoint x="1590" y="720"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edefaultStrategyUtil" value="usa helpers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="defaultStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="860"/>
+                            <mxPoint x="770" y="760"/>
+                            <mxPoint x="560" y="760"/>
+                            <mxPoint x="560" y="910"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="efloodStrategyUtil" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="floodStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry x="-0.0118" y="10" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1120" y="860"/>
+                            <mxPoint x="1120" y="760"/>
+                            <mxPoint x="560" y="760"/>
+                            <mxPoint x="560" y="910"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="erainStrategyUtil" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="rainStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1650" y="760"/>
+                            <mxPoint x="560" y="760"/>
+                            <mxPoint x="560" y="910"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="elandslideStrategyUtil" value="usa helpers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="landslideStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="1010"/>
+                            <mxPoint x="560" y="1010"/>
+                            <mxPoint x="560" y="900"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eearthquakeStrategyUtil" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="earthquakeStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1120" y="1010"/>
+                            <mxPoint x="560" y="1010"/>
+                            <mxPoint x="560" y="900"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ehurricaneStrategyUtil" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;fontSize=11;endArrow=open;dashed=1;" parent="1" source="hurricaneStrategy" target="keywordsUtil" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1650" y="1010"/>
+                            <mxPoint x="560" y="1010"/>
+                            <mxPoint x="560" y="900"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
