@@ -15,6 +15,8 @@ import type { BackendRiskAlertNotification, RealTimeAlert } from './models/risk-
 
 export type { BackendRiskAlertContent, BackendRiskAlertNotification, RealTimeAlert } from './models/risk-alert.model';
 
+
+
 /**
  * Modelo para representar una notificacion enviada por canales.
  */
@@ -61,7 +63,7 @@ export class NotificationService {
    * Mientras no exista comunicacion real con backend, este flag mantiene el
    * sistema trabajando con respuestas simuladas que respetan el contrato real.
    */
-  private readonly simulationModeEnabled = true;
+  private readonly simulationModeEnabled = false;
 
   /** Observable publico de alertas activas para usar con async pipe. */
   public get alerts$(): Observable<RealTimeAlert[]> {
@@ -528,40 +530,59 @@ export class NotificationService {
       simulated: true
     };
   }
-
-  private normalizeBackendPayload(payload: BackendRiskAlertNotification | string): BackendRiskAlertNotification {
-    if (typeof payload !== 'string') {
-      return payload;
-    }
-
-    try {
-      const parsed = JSON.parse(payload) as BackendRiskAlertNotification;
-      if (parsed?.content?.id) {
-        return parsed;
-      }
-    } catch {
-      // Si el backend legacy envia solo texto, se adapta al contrato nuevo.
-    }
-
-    const now = new Date();
-    return {
-      title: 'Nueva alerta de riesgo',
-      content: {
-        id: this.createAlertId(),
-        eventType: 4,
-        riskLevel: 2,
-        title: 'Alerta informativa',
-        message: payload,
-        location: 'Valle de Aburra',
-        source: 'Backend',
-        createdAt: now.toISOString(),
-        expiresAt: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
-        status: 'Active',
-        instructions: ['Revise la informacion y mantengase atento a nuevas actualizaciones.'],
-        channels: [3]
-      }
-    };
+private normalizeAlertStatus(status: unknown): any {
+  if (typeof status === 'string') {
+    return status;
   }
+
+  switch (status) {
+    case 0:
+      return 'Active';
+    case 1:
+      return 'Expired';
+    case 2:
+      return 'Resolved';
+    case 3:
+      return 'Cancelled';
+    default:
+      return 'Active';
+  }
+}
+  private normalizeBackendPayload(
+  payload: BackendRiskAlertNotification | string | any
+): BackendRiskAlertNotification {
+  const parsedPayload =
+    typeof payload === 'string'
+      ? JSON.parse(payload)
+      : payload;
+
+  const rawContent = parsedPayload.content;
+
+  const parsedContent =
+    typeof rawContent === 'string'
+      ? JSON.parse(rawContent)
+      : rawContent;
+
+  return {
+    title: parsedPayload.title ?? parsedContent.Title ?? parsedContent.title,
+    content: {
+      id: parsedContent.id ?? parsedContent.Id,
+      eventType: parsedContent.eventType ?? parsedContent.EventType,
+      riskLevel: parsedContent.riskLevel ?? parsedContent.RiskLevel,
+      title: parsedContent.title ?? parsedContent.Title,
+      message: parsedContent.message ?? parsedContent.Message,
+      location: parsedContent.location ?? parsedContent.Location,
+      source: parsedContent.source ?? parsedContent.Source,
+      createdAt: parsedContent.createdAt ?? parsedContent.CreatedAt,
+      expiresAt: parsedContent.expiresAt ?? parsedContent.ExpiresAt,
+      status: this.normalizeAlertStatus(
+        parsedContent.status ?? parsedContent.Status
+      ),
+      instructions: parsedContent.instructions ?? parsedContent.Instructions ?? [],
+      channels: parsedContent.channels ?? parsedContent.Channels ?? []
+    }
+  };
+}
 
   private createAlertId(): string {
     if (globalThis.crypto?.randomUUID) {
